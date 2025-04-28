@@ -1,5 +1,6 @@
 const admin = require('firebase-admin');
-const db = admin.firestore();
+const { db } = require('../firebase');  // ✅ Proper way
+
 
 // Add new user or admin
 exports.addUser = async (req, res) => {
