@@ -1,0 +1,194 @@
+/* LoginPage.css - Styles for login page only */
+
+/* Use a scoped approach to prevent affecting other components */
+.login-page-body {
+  margin: 0;
+  padding: 0;
+  background-color: #808080;
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.login-container {
+  display: flex;
+  height: 80vh;
+  width: 80%;
+  max-width: 1200px;
+  margin: 0 auto;
+  font-family: 'Segoe UI', 'Helvetica Neue', sans-serif;
+  background-color: #fff;
+  border-radius: 12px;
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.12);
+  overflow: hidden;
+}
+
+.login-left {
+  width: 50%;
+  padding: 40px 60px;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+  box-sizing: border-box;
+}
+
+.login-logo {
+  margin-bottom: 40px;
+}
+
+.logo-icon {
+  background-color: #004225;
+  width: 40px;
+  height: 40px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.logo-icon svg {
+  width: 24px;
+  height: 24px;
+}
+
+.login-form-container {
+  margin-top: 50px;
+  width: 100%;
+}
+
+.login-form {
+  width: 100%;
+}
+
+.login-form .ant-form-item {
+  margin-bottom: 20px;
+}
+
+.login-form .ant-input {
+  padding: 10px;
+  border-radius: 4px;
+}
+
+.forgot-password {
+  float: right;
+  color: #004225;
+  font-size: 14px;
+  cursor: pointer;
+}
+
+.login-button {
+  background-color: #004225;
+  height: 44px;
+  font-size: 16px;
+  font-weight: 500;
+  margin-top: 10px;
+}
+
+.login-button:hover {
+  background-color: #005b33;
+}
+
+.login-footer {
+  margin-top: 20px;
+  text-align: center;
+}
+
+.signup-link {
+  color: #004225;
+  font-weight: 500;
+}
+
+/* Right side styling */
+.login-right {
+  width: 50%;
+  background: linear-gradient(135deg, #004225 0%, #0e8c58 100%);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 40px;
+  box-sizing: border-box;
+  color: white;
+  padding-top: 10%;
+  padding-bottom: 10%;
+}
+
+.tagline {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  max-width: 500px;
+}
+
+.tagline-text {
+  margin-bottom: 40px;
+  display: flex;
+  justify-content: center;
+}
+
+/* Responsive adjustments */
+@media (max-width: 992px) {
+  .login-container {
+    flex-direction: column;
+    height: auto;
+    width: 90%;
+  }
+  
+  .login-left, .login-right {
+    width: 100%;
+    height: auto;
+    padding: 30px;
+  }
+  
+  .login-right {
+    padding-top: 60px;
+    padding-bottom: 60px;
+  }
+  
+  .tagline {
+    align-items: center;
+  }
+}
+
+/* Mobile styles */
+@media (max-width: 576px) {
+  .login-container {
+    width: 95%;
+    border-radius: 8px;
+  }
+  
+  .login-left {
+    padding: 30px 20px;
+  }
+  
+  .login-right {
+    padding: 40px 20px;
+  }
+  
+  .tagline-text img {
+    max-width: 100%;
+    height: auto;
+  }
+}
+
+/* iPhone 14 specific */
+@media only screen 
+and (device-width: 390px) 
+and (device-height: 844px) 
+and (-webkit-device-pixel-ratio: 3) {
+  .login-container {
+    height: auto;
+  }
+  
+  .login-left {
+    padding: 25px 15px;
+  }
+  
+  .login-form-container {
+    margin-top: 30px;
+  }
+  
+  .login-button {
+    height: 48px; /* Larger touch target */
+  }
+}

@@ -1,35 +1,44 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from '/vite.svg'
-import './App.css'
+import React from 'react';
+import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import LoginPage from './components/LoginPage';
+import Dashboard from './components/Dashboard';
+
+// Protected route component that checks if user is authenticated
+const ProtectedRoute = ({ element }) => {
+  const isAuthenticated = !!localStorage.getItem('userId');
+  
+  // If user is not authenticated, redirect to login
+  if (!isAuthenticated) {
+    return <Navigate to="/" replace />;
+  }
+  
+  // If authenticated, render the element
+  return element;
+};
 
 function App() {
-  const [count, setCount] = useState(0)
-
   return (
-    <>
-      <div>
-        <a href="https://vite.dev" target="_blank">
-          <img src={viteLogo} className="logo" alt="Vite logo" />
-        </a>
-        <a href="https://react.dev" target="_blank">
-          <img src={reactLogo} className="logo react" alt="React logo" />
-        </a>
-      </div>
-      <h1>Vite + React</h1>
-      <div className="card">
-        <button onClick={() => setCount((count) => count + 1)}>
-          count is {count}
-        </button>
-        <p>
-          Edit <code>src/App.jsx</code> and save to test HMR
-        </p>
-      </div>
-      <p className="read-the-docs">
-        Click on the Vite and React logos to learn more
-      </p>
-    </>
-  )
+    <Router>
+      <Routes>
+        {/* Public route */}
+        <Route path="/" element={<LoginPage />} />
+        
+        {/* Protected dashboard route - same component for all roles */}
+        <Route 
+          path="/dashboard" 
+          element={<ProtectedRoute element={<Dashboard />} />} 
+        />
+        
+        {/* Redirect old role-specific routes to unified dashboard */}
+        <Route path="/superadmin-dashboard" element={<Navigate to="/dashboard" replace />} />
+        <Route path="/admin-dashboard" element={<Navigate to="/dashboard" replace />} />
+        <Route path="/user-dashboard" element={<Navigate to="/dashboard" replace />} />
+        
+        {/* Fallback route for any unmatched paths */}
+        <Route path="*" element={<Navigate to="/" replace />} />
+      </Routes>
+    </Router>
+  );
 }
 
-export default App
+export default App;

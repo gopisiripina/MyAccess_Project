@@ -1,0 +1,271 @@
+/* Sidebar.css */
+
+.sidebar {
+  width: 250px;
+  min-width: 250px;
+  background-color: #2c3e50;
+  color: #ecf0f1;
+  display: flex;
+  flex-direction: column;
+  position: fixed;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  z-index: 100;
+  transition: transform 0.3s ease;
+  overflow-y: auto;
+  height: 100vh;
+}
+  
+.sidebar.closed {
+  width: 70px;
+  min-width: 70px;
+}
+  
+.sidebar-header {
+  height: 64px;
+  padding: 0 16px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+  
+.app-logo {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+  
+.logo-icon {
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+  
+.logo-icon svg {
+  width: 100%;
+  height: 100%;
+  fill: #3498db;
+}
+  
+.app-name {
+  font-size: 18px;
+  font-weight: 600;
+  color: white;
+}
+  
+.toggle-button {
+  background: transparent;
+  border: none;
+  color: #ecf0f1;
+  cursor: pointer;
+  padding: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+  
+.toggle-button:hover {
+  color: white;
+}
+  
+.toggle-button svg {
+  width: 20px;
+  height: 20px;
+}
+  
+/* Sidebar menu */
+.sidebar-menu {
+  flex: 1;
+  padding: 16px 0;
+}
+  
+.sidebar-menu ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+  
+.sidebar-menu li {
+  margin-bottom: 2px;
+}
+  
+.menu-item {
+  display: flex;
+  align-items: center;
+  padding: 12px 16px;
+  width: 100%;
+  background: transparent;
+  border: none;
+  color: #bdc3c7;
+  cursor: pointer;
+  text-align: left;
+  transition: all 0.2s;
+  font-size: 15px;
+  gap: 12px;
+}
+  
+.menu-item:hover {
+  background-color: rgba(255, 255, 255, 0.1);
+  color: white;
+}
+  
+.menu-item.active {
+  background-color: rgba(255, 255, 255, 0.08);
+  color: white;
+  border-left: 3px solid #4299e1;
+}
+  
+.menu-icon {
+  width: 24px;
+  text-align: center;
+}
+  
+.sidebar.closed .menu-icon {
+  margin-right: 0;
+}
+  
+.menu-label {
+  flex: 1;
+}
+  
+/* Sidebar footer */
+.sidebar-footer {
+  padding: 16px;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  font-size: 12px;
+  color: #718096;
+  text-align: center;
+}
+
+/* Toggle button for mobile */
+.mobile-toggle-button {
+  display: none;
+  position: fixed;
+  top: 16px;
+  left: 16px;
+  z-index: 1001;
+  background-color: #2c3e50;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  width: 40px;
+  height: 40px;
+  justify-content: center;
+  align-items: center;
+  cursor: pointer;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+}
+
+/* Mobile styles for iPhone 14 Pro Max and other mobile devices */
+@media screen and (max-width: 844px) {
+  /* Show mobile toggle button */
+  .mobile-toggle-button {
+    display: flex;
+  }
+
+  /* Default state - sidebar is off screen */
+  .sidebar {
+    width: 250px;
+    min-width: 250px;
+    transform: translateX(-100%);
+    flex-direction: column;
+    top: 0;
+    height: 100%;
+    overflow-y: auto;
+    position: fixed;
+    z-index: 1000;
+  }
+  
+  /* When sidebar is open via .open class */
+  .sidebar.open {
+    transform: translateX(0);
+  }
+  
+  /* Ensure closed sidebar is properly hidden */
+  .sidebar.closed {
+    width: 70px;
+    min-width: 70px;
+    transform: translateX(-100%);
+  }
+  
+  /* When closed sidebar is also open */
+  .sidebar.closed.open {
+    transform: translateX(0);
+  }
+  
+  /* Keep sidebar-header visible with consistent height */
+  .sidebar-header {
+    height: 60px;
+    padding: 0 16px;
+  }
+  
+  /* Adjust menu items for better touch targets */
+  .menu-item {
+    padding: 16px;
+    font-size: 16px;
+  }
+  
+  .menu-icon {
+    width: 24px;
+    height: 24px;
+  }
+  
+  /* Make logout button more prominent in footer */
+  .sidebar-footer {
+    padding: 20px 16px;
+    font-size: 14px;
+  }
+}
+
+/* iPhone 14 Pro Max specific adjustments */
+@media screen and (max-width: 430px) {
+  .sidebar {
+    width: 280px; /* Slightly wider for better reading */
+  }
+  
+  .sidebar.closed {
+    width: 70px;
+  }
+  
+  /* Adjust for iPhone home indicator at bottom */
+  .sidebar-footer {
+    padding-bottom: calc(20px + env(safe-area-inset-bottom));
+  }
+  
+  /* Larger touch targets */
+  .menu-item {
+    padding: 16px;
+    min-height: 56px;
+  }
+  
+  .menu-icon {
+    width: 26px;
+    height: 26px;
+  }
+  
+  /* Handle notch area */
+  .sidebar-header {
+    padding-top: env(safe-area-inset-top);
+    height: calc(60px + env(safe-area-inset-top));
+  }
+  
+  /* Make overlay dismiss on tap */
+  .sidebar-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(0, 0, 0, 0.5);
+    z-index: 999;
+    display: none;
+  }
+  
+  .sidebar.open + .sidebar-overlay {
+    display: block;
+  }
+}
