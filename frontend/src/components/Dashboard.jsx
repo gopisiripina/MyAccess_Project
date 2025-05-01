@@ -14,7 +14,9 @@ const Dashboard = () => {
   const [formData, setFormData] = useState({
     email: '',
     password: '',
-    role: 'user'
+    role: 'user',
+    name: '',
+    mobile: ''
   });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
@@ -43,7 +45,7 @@ const Dashboard = () => {
       setShowModal(false);
       setIsEditMode(false);
       setEditUserId(null);
-      setFormData({ email: '', password: '', role: 'user' });
+      setFormData({ email: '', password: '', role: 'user', name: '', mobile: '' });
     }
   }, [activeTab, navigate]);
 
@@ -133,7 +135,9 @@ const Dashboard = () => {
       const userData = {
         email: formData.email,
         password: formData.password,
-        role: roleToAdd
+        role: roleToAdd,
+        name: formData.name,
+        mobile: formData.mobile
       };
   
       const config = {
@@ -146,7 +150,7 @@ const Dashboard = () => {
   
       await axios.post('http://localhost:5000/api/users/add', userData, config);
   
-      setFormData({ email: '', password: '', role: 'user' });
+      setFormData({ email: '', password: '', role: 'user', name: '', mobile: '' });
       setShowModal(false);
       fetchUsers();
   
@@ -163,7 +167,9 @@ const Dashboard = () => {
     setFormData({
       email: user.email,
       password: '', // Password is not shown in edit mode
-      role: user.role
+      role: user.role,
+      name: user.name || '',
+      mobile: user.mobile || ''
     });
     // Store the user ID for editing
     const userId = user._id || user.id; // Handle different ID field names
@@ -199,7 +205,9 @@ const Dashboard = () => {
   
       const updatedData = {
         email: formData.email,
-        role: formData.role
+        role: formData.role,
+        name: formData.name,
+        mobile: formData.mobile
       };
   
       // If admin is editing, they can't change the role
@@ -229,7 +237,7 @@ const Dashboard = () => {
       await axios.patch(`http://localhost:5000/api/users/edit/${editUserId}`, updatedData, config);
   
       setShowModal(false);
-      setFormData({ email: '', password: '', role: 'user' });
+      setFormData({ email: '', password: '', role: 'user', name: '', mobile: '' });
       setIsEditMode(false);
       setEditUserId(null);
       fetchUsers();
@@ -324,7 +332,9 @@ const Dashboard = () => {
                 setFormData({ 
                   email: '', 
                   password: '', 
-                  role: isAdminsList ? 'admin' : 'user' 
+                  role: isAdminsList ? 'admin' : 'user',
+                  name: '',
+                  mobile: ''
                 });
                 setShowModal(true);
               }}
@@ -343,6 +353,8 @@ const Dashboard = () => {
             <thead>
               <tr>
                 <th>Email</th>
+                <th>Name</th>
+                <th>Mobile</th>
                 <th>Role</th>
                 <th>Actions</th>
               </tr>
@@ -354,6 +366,8 @@ const Dashboard = () => {
                   return (
                     <tr key={userId}>
                       <td>{user.email}</td>
+                      <td>{user.name || '-'}</td>
+                      <td>{user.mobile || '-'}</td>
                       <td>{user.role}</td>
                       <td>
                         <button 
@@ -375,7 +389,7 @@ const Dashboard = () => {
                 })
               ) : (
                 <tr>
-                  <td colSpan="3">No {isAdminsList ? 'admins' : 'users'} found</td>
+                  <td colSpan="5">No {isAdminsList ? 'admins' : 'users'} found</td>
                 </tr>
               )}
             </tbody>
@@ -429,7 +443,7 @@ const Dashboard = () => {
                 setShowModal(false);
                 setIsEditMode(false);
                 setEditUserId(null);
-                setFormData({ email: '', password: '', role: 'user' });
+                setFormData({ email: '', password: '', role: 'user', name: '', mobile: '' });
               }}
             >
               ×
@@ -462,6 +476,28 @@ const Dashboard = () => {
               </div>
             )}
 
+            <div className="form-group">
+              <label htmlFor="name">Name</label>
+              <input
+                type="text"
+                id="name"
+                name="name"
+                value={formData.name}
+                onChange={handleInputChange}
+              />
+            </div>
+
+            <div className="form-group">
+              <label htmlFor="mobile">Mobile</label>
+              <input
+                type="text"
+                id="mobile"
+                name="mobile"
+                value={formData.mobile}
+                onChange={handleInputChange}
+              />
+            </div>
+
             {/* Only show role dropdown when editing (not when adding) */}
             {showRoleSelect && isEditMode && (
               <div className="form-group">
@@ -484,7 +520,7 @@ const Dashboard = () => {
                   setShowModal(false);
                   setIsEditMode(false);
                   setEditUserId(null);
-                  setFormData({ email: '', password: '', role: 'user' });
+                  setFormData({ email: '', password: '', role: 'user', name: '', mobile: '' });
                 }}
               >
                 Cancel
