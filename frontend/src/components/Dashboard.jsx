@@ -9,6 +9,8 @@ const Dashboard = () => {
   const [userRole, setUserRole] = useState('');
   const [users, setUsers] = useState([]);
   const [showModal, setShowModal] = useState(false);
+  const [isEditMode, setIsEditMode] = useState(false);
+  const [editUserId, setEditUserId] = useState(null);
   const [formData, setFormData] = useState({
     email: '',
     password: '',
@@ -35,18 +37,36 @@ const Dashboard = () => {
     if ((activeTab === 'users' || activeTab === 'admins') && (role === 'superadmin' || (role === 'admin' && activeTab === 'users'))) {
       fetchUsers();
     }
+    
+    // Clear any leftover editing state when tab changes
+    if (showModal) {
+      setShowModal(false);
+      setIsEditMode(false);
+      setEditUserId(null);
+      setFormData({ email: '', password: '', role: 'user' });
+    }
   }, [activeTab, navigate]);
 
   const fetchUsers = async () => {
     try {
       setLoading(true);
+      const loggedInUserId = localStorage.getItem('userId');
+      const role = localStorage.getItem('userRole');
+      
+      if (!loggedInUserId || !role) {
+        navigate('/');
+        return;
+      }
+
       const config = {
         headers: {
           'Content-Type': 'application/json',
+          'userid': loggedInUserId,
+          'role': role
         }
       };
 
-      const response = await axios.get('http://localhost:5000/api/users/', config);
+      const response = await axios.get('http://localhost:5000/api/users', config);
       
       let filteredUsers = response.data;
       if (activeTab === 'admins') {
@@ -56,6 +76,7 @@ const Dashboard = () => {
       }
       
       setUsers(filteredUsers);
+      setError('');
     } catch (err) {
       console.error('Error fetching users:', err);
       setError('Failed to fetch users. Please try again.');
@@ -85,33 +106,50 @@ const Dashboard = () => {
     
     try {
       setLoading(true);
-      
-      let roleToAdd = formData.role;
-      if (userRole === 'admin') {
-        roleToAdd = 'user';
-      } else if (userRole === 'superadmin' && activeTab === 'admins') {
-        roleToAdd = 'admin';
+      setError('');
+  
+      const loggedInUserId = localStorage.getItem('userId');
+      const role = localStorage.getItem('userRole');
+  
+      if (!loggedInUserId || !role) {
+        navigate('/');
+        return;
       }
+  
+      // Determine role to add based on current user's role and active tab
+      // Don't rely on formData.role since we'll be hiding the dropdown
+      let roleToAdd = 'user'; // Default role
       
+      if (role === 'admin') {
+        roleToAdd = 'user'; // Admins can only add users
+      } else if (role === 'superadmin') {
+        if (activeTab === 'admins') {
+          roleToAdd = 'admin'; // Superadmin adding from admins tab
+        } else {
+          roleToAdd = 'user'; // Superadmin adding from users tab
+        }
+      }
+  
       const userData = {
         email: formData.email,
         password: formData.password,
-        role: roleToAdd,
-        currentRole: userRole
+        role: roleToAdd
       };
-      
+  
       const config = {
         headers: {
-          'Content-Type': 'application/json'
+          'Content-Type': 'application/json',
+          'userid': loggedInUserId,
+          'role': role
         }
       };
-      
+  
       await axios.post('http://localhost:5000/api/users/add', userData, config);
-      
+  
       setFormData({ email: '', password: '', role: 'user' });
       setShowModal(false);
       fetchUsers();
-      
+  
     } catch (err) {
       console.error('Error adding user:', err);
       setError(err.response?.data?.message || 'Failed to add user. Please try again.');
@@ -120,14 +158,113 @@ const Dashboard = () => {
     }
   };
 
-  const handleDeleteUser = async (userId) => {
+  const handleEditClick = (user) => {
+    console.log("Edit clicked for user:", user);
+    setFormData({
+      email: user.email,
+      password: '', // Password is not shown in edit mode
+      role: user.role
+    });
+    // Store the user ID for editing
+    const userId = user._id || user.id; // Handle different ID field names
+    console.log("Setting editUserId to:", userId);
+    setEditUserId(userId);
+    setIsEditMode(true);
+    setShowModal(true);
+  };
+  
+  const handleEditUser = async (e) => {
+    e.preventDefault();
+  
+    try {
+      setLoading(true);
+      setError('');
+  
+      const loggedInUserId = localStorage.getItem('userId');
+      const role = localStorage.getItem('userRole');
+  
+      console.log("Current editUserId:", editUserId);
+      
+      if (!loggedInUserId || !role) {
+        navigate('/');
+        return;
+      }
+      
+      if (!editUserId) {
+        console.error('No user ID available for editing');
+        setError('No user selected for editing. Please try again.');
+        setLoading(false);
+        return;
+      }
+  
+      const updatedData = {
+        email: formData.email,
+        role: formData.role
+      };
+  
+      // If admin is editing, they can't change the role
+      if (role === 'admin') {
+        updatedData.role = 'user';
+      }
+  
+      // Ensure we're not promoting to superadmin unless we are superadmin
+      if (role === 'superadmin' && updatedData.role === 'superadmin') {
+        // Only allow if the user was already a superadmin
+        const userBeingEdited = users.find(user => user._id === editUserId || user.id === editUserId);
+        if (userBeingEdited && userBeingEdited.role !== 'superadmin') {
+          updatedData.role = 'admin'; // Limit promotion to admin
+        }
+      }
+  
+      const config = {
+        headers: {
+          'Content-Type': 'application/json',
+          'userid': loggedInUserId,
+          'role': role
+        }
+      };
+      
+      console.log('Editing user with ID:', editUserId);
+      console.log('Updated data:', updatedData);
+      await axios.patch(`http://localhost:5000/api/users/edit/${editUserId}`, updatedData, config);
+  
+      setShowModal(false);
+      setFormData({ email: '', password: '', role: 'user' });
+      setIsEditMode(false);
+      setEditUserId(null);
+      fetchUsers();
+  
+    } catch (err) {
+      console.error('Error editing user:', err);
+      setError(err.response?.data?.message || 'Failed to edit user. Please try again.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleDeleteUser = async (userIdToDelete) => {
     if (window.confirm('Are you sure you want to delete this user?')) {
       try {
-        await axios.delete(`http://localhost:5000/api/users/delete/${userId}`);
+        const loggedInUserId = localStorage.getItem('userId');
+        const role = localStorage.getItem('userRole');
+  
+        if (!loggedInUserId || !role) {
+          navigate('/');
+          return;
+        }
+  
+        const config = {
+          headers: {
+            'userid': loggedInUserId,
+            'role': role
+          }
+        };
+  
+        await axios.delete(`http://localhost:5000/api/users/delete/${userIdToDelete}`, config);
         fetchUsers();
       } catch (err) {
         console.error('Error deleting user:', err);
-        setError('Failed to delete user.');
+        setError('Failed to delete user. Please try again.');
       }
     }
   };
@@ -143,10 +280,34 @@ const Dashboard = () => {
   const renderDashboardContent = () => {
     return (
       <div className="dashboard-welcome">
-        <h2>{userRole.charAt(0).toUpperCase() + userRole.slice(1)}</h2>
-        <p>This is your personalized dashboard.</p>
+        <h2>{userRole.charAt(0).toUpperCase() + userRole.slice(1)} Dashboard</h2>
+        <p>Welcome to your personalized dashboard.</p>
       </div>
     );
+  };
+
+  // Function to render role options based on user role and context
+  const renderRoleOptions = () => {
+    // Default options based on logged in user's role
+    if (userRole === 'superadmin') {
+      // In edit mode, if user being edited is a superadmin, show the superadmin option
+      const userBeingEdited = isEditMode ? users.find(user => user._id === editUserId || user.id === editUserId) : null;
+      const showSuperadminOption = isEditMode && userBeingEdited && userBeingEdited.role === 'superadmin';
+      
+      return (
+        <>
+          <option value="user">User</option>
+          <option value="admin">Admin</option>
+          {showSuperadminOption && <option value="superadmin">Superadmin</option>}
+        </>
+      );
+    } else if (userRole === 'admin') {
+      // Admins can only manage users, so only show user option
+      return <option value="user">User</option>;
+    }
+    
+    // Default case - only user option
+    return <option value="user">User</option>;
   };
 
   const renderUsersList = (title, isAdminsList = false) => {
@@ -154,12 +315,23 @@ const Dashboard = () => {
       <div className="users-list-container">
         <div className="users-header">
           <h2>{title}</h2>
-          <button 
-            className="add-button"
-            onClick={() => setShowModal(true)}
-          >
-            + Add {isAdminsList ? 'Admin' : 'User'}
-          </button>
+          {(userRole === 'superadmin' || (userRole === 'admin' && !isAdminsList)) && (
+            <button 
+              className="add-button"
+              onClick={() => {
+                setIsEditMode(false);
+                // When adding a new user, set the role automatically based on the tab
+                setFormData({ 
+                  email: '', 
+                  password: '', 
+                  role: isAdminsList ? 'admin' : 'user' 
+                });
+                setShowModal(true);
+              }}
+            >
+              + Add {isAdminsList ? 'Admin' : 'User'}
+            </button>
+          )}
         </div>
         
         {loading ? (
@@ -177,20 +349,30 @@ const Dashboard = () => {
             </thead>
             <tbody>
               {users.length > 0 ? (
-                users.map(user => (
-                  <tr key={user.id}>
-                    <td title={user.email}>{user.email}</td>
-                    <td>{user.role}</td>
-                    <td>
-                      <button 
-                        className="delete-button"
-                        onClick={() => handleDeleteUser(user.id)}
-                      >
-                        Delete
-                      </button>
-                    </td>
-                  </tr>
-                ))
+                users.map(user => {
+                  const userId = user._id || user.id; // Handle both MongoDB and Firestore ID formats
+                  return (
+                    <tr key={userId}>
+                      <td>{user.email}</td>
+                      <td>{user.role}</td>
+                      <td>
+                        <button 
+                          className="edit-button"
+                          onClick={() => handleEditClick(user)}
+                        >
+                          Edit
+                        </button>
+                        <button 
+                          className="delete-button"
+                          onClick={() => handleDeleteUser(userId)}
+                          disabled={user.role === 'superadmin'}
+                        >
+                          Delete
+                        </button>
+                      </td>
+                    </tr>
+                  );
+                })
               ) : (
                 <tr>
                   <td colSpan="3">No {isAdminsList ? 'admins' : 'users'} found</td>
@@ -219,22 +401,41 @@ const Dashboard = () => {
   const renderModal = () => {
     if (!showModal) return null;
 
-    let modalTitle = 'Add User';
-    let showRoleSelect = false;
+    const modalTitle = isEditMode 
+      ? `Edit ${formData.role === 'admin' ? 'Admin' : 'User'}`
+      : activeTab === 'admins' 
+        ? 'Add Admin' 
+        : 'Add User';
 
-    if (userRole === 'superadmin') {
-      modalTitle = activeTab === 'admins' ? 'Add Admin' : 'Add User';
-      showRoleSelect = true;
+    // Debug info
+    if (isEditMode) {
+      console.log("Modal - Edit Mode:", isEditMode);
+      console.log("Modal - Edit User ID:", editUserId);
+      console.log("Modal - Form Data:", formData);
     }
+
+    // Determine if role select should be shown (only for editing, not for adding)
+    const showRoleSelect = (userRole === 'superadmin') || 
+                          (userRole === 'admin' && activeTab === 'users');
 
     return (
       <div className="modal-overlay">
         <div className="modal">
           <div className="modal-header">
             <h3>{modalTitle}</h3>
-            <button className="close-button" onClick={() => setShowModal(false)}>×</button>
+            <button 
+              className="close-button" 
+              onClick={() => {
+                setShowModal(false);
+                setIsEditMode(false);
+                setEditUserId(null);
+                setFormData({ email: '', password: '', role: 'user' });
+              }}
+            >
+              ×
+            </button>
           </div>
-          <form onSubmit={handleAddUser}>
+          <form onSubmit={isEditMode ? handleEditUser : handleAddUser}>
             <div className="form-group">
               <label htmlFor="email">Email</label>
               <input
@@ -246,39 +447,52 @@ const Dashboard = () => {
                 required
               />
             </div>
-            <div className="form-group">
-              <label htmlFor="password">Password</label>
-              <input
-                type="password"
-                id="password"
-                name="password"
-                value={formData.password}
-                onChange={handleInputChange}
-                required
-              />
-            </div>
-            {showRoleSelect && (
+
+            {!isEditMode && (
               <div className="form-group">
-                {/* <label htmlFor="role">Role</label> */}
-                <div
-                  id="role"
-                  name="role"
-                  value={activeTab === 'admins' ? 'admin' : formData.role}
+                <label htmlFor="password">Password</label>
+                <input
+                  type="password"
+                  id="password"
+                  name="password"
+                  value={formData.password}
                   onChange={handleInputChange}
-                  disabled={activeTab === 'admins'}
-                >
-                  {activeTab === 'admins' ? (
-                    <option value="admin"></option>
-                  ) : (
-                    <option value="user"></option>
-                  )}
-                </div>
+                  required
+                />
               </div>
             )}
+
+            {/* Only show role dropdown when editing (not when adding) */}
+            {showRoleSelect && isEditMode && (
+              <div className="form-group">
+                <label htmlFor="role">Role</label>
+                <select
+                  id="role"
+                  name="role"
+                  value={formData.role}
+                  onChange={handleInputChange}
+                >
+                  {renderRoleOptions()}
+                </select>
+              </div>
+            )}
+
             <div className="form-actions">
-              <button type="button" onClick={() => setShowModal(false)}>Cancel</button>
+              <button 
+                type="button" 
+                onClick={() => {
+                  setShowModal(false);
+                  setIsEditMode(false);
+                  setEditUserId(null);
+                  setFormData({ email: '', password: '', role: 'user' });
+                }}
+              >
+                Cancel
+              </button>
               <button type="submit" disabled={loading}>
-                {loading ? 'Adding...' : 'Add'}
+                {loading 
+                  ? (isEditMode ? 'Updating...' : 'Adding...') 
+                  : (isEditMode ? 'Update' : 'Add')}
               </button>
             </div>
           </form>
@@ -287,7 +501,6 @@ const Dashboard = () => {
     );
   };
 
-  // Calculate main content class based on sidebar state
   const mainContentClass = `main-content ${!isSidebarOpen ? 'sidebar-closed' : ''}`;
 
   return (
@@ -295,7 +508,7 @@ const Dashboard = () => {
       <Sidebar 
         userRole={userRole} 
         activeTab={activeTab} 
-        onTabChange={setActiveTab}
+        onTabChange={handleTabChange}
         onLogout={handleLogout}
         onSidebarToggle={handleSidebarToggle}
       />
