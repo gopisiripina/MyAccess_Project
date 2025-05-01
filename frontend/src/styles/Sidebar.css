@@ -141,6 +141,24 @@
   text-align: center;
 }
 
+/* Logout button icon for closed sidebar */
+.logout-button-icon {
+  background: transparent;
+  border: none;
+  color: #ecf0f1;
+  cursor: pointer;
+  padding: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto;
+  font-size: 24px;
+}
+
+.logout-button-icon:hover {
+  color: white;
+}
+
 /* Toggle button for mobile */
 .mobile-toggle-button {
   display: none;
@@ -185,11 +203,11 @@
     transform: translateX(0);
   }
   
-  /* Ensure closed sidebar is properly hidden */
+  /* Fix for closed sidebar on mobile - don't hide completely */
   .sidebar.closed {
     width: 70px;
     min-width: 70px;
-    transform: translateX(-100%);
+    transform: translateX(-70px); /* Only move it off-screen by its own width */
   }
   
   /* When closed sidebar is also open */

@@ -30,7 +30,7 @@
   transform: translateX(0);
 }
 
-
+/* Main content area */
 .main-content {
   flex: 1;
   display: flex;
@@ -38,9 +38,9 @@
   margin-left: 250px;
   min-height: 100vh;
   width: calc(100vw - 250px); /* Full viewport width minus sidebar */
+  max-width: calc(100vw - 250px);
   overflow-x: hidden; /* Prevent horizontal scroll */
 }
-
 
 .top-bar {
   height: 64px;
@@ -121,6 +121,8 @@
   border-radius: 8px;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
   overflow: hidden;
+  width: 100%;
+  max-width: 100%;
 }
 
 .users-header {
@@ -146,6 +148,7 @@
   cursor: pointer;
   font-weight: 500;
   transition: background-color 0.2s ease;
+  white-space: nowrap;
 }
 
 .add-button:hover {
@@ -156,6 +159,7 @@
 .users-table {
   width: 100%;
   border-collapse: collapse;
+  table-layout: fixed; /* Fixed table layout to control column widths */
 }
 
 .users-table th,
@@ -163,6 +167,25 @@
   padding: 16px 24px;
   text-align: left;
   border-bottom: 1px solid #e1e5eb;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis; /* Add ellipsis for text overflow */
+}
+
+/* Set fixed column widths */
+.users-table th:nth-child(1),
+.users-table td:nth-child(1) {
+  width: 60%; /* Email column */
+}
+
+.users-table th:nth-child(2),
+.users-table td:nth-child(2) {
+  width: 20%; /* Role column */
+}
+
+.users-table th:nth-child(3),
+.users-table td:nth-child(3) {
+  width: 20%; /* Actions column */
 }
 
 .users-table th {
@@ -184,6 +207,7 @@
   cursor: pointer;
   font-size: 14px;
   transition: all 0.2s ease;
+  white-space: nowrap;
 }
 
 .delete-button:hover {
@@ -263,6 +287,7 @@
   border: 1px solid #e1e5eb;
   border-radius: 4px;
   font-size: 16px;
+  box-sizing: border-box; /* Ensure padding doesn't affect width */
 }
 
 .form-group input:focus,
@@ -328,6 +353,7 @@
   .main-content {
     margin-left: 0;
     width: 100%;
+    max-width: 100%;
     padding-bottom: 75px; /* Increased height for iPhone navigation */
   }
   
@@ -343,10 +369,15 @@
   }
   
   /* Make tables scroll horizontally */
+  .users-list-container {
+    overflow-x: auto; /* Enable horizontal scroll for container */
+    max-width: 100%;
+  }
+  
   .users-table {
-    display: block;
-    overflow-x: auto;
-    white-space: nowrap;
+    width: 100%;
+    min-width: 500px; /* Ensure minimum width for small screens */
+    table-layout: fixed; /* Keep fixed layout */
   }
   
   .users-table th,

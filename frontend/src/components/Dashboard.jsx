@@ -16,6 +16,7 @@ const Dashboard = () => {
   });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [isSidebarOpen, setIsSidebarOpen] = useState(true);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -65,6 +66,10 @@ const Dashboard = () => {
 
   const handleTabChange = (tab) => {
     setActiveTab(tab);
+  };
+
+  const handleSidebarToggle = (isOpen) => {
+    setIsSidebarOpen(isOpen);
   };
 
   const handleInputChange = (e) => {
@@ -138,7 +143,7 @@ const Dashboard = () => {
   const renderDashboardContent = () => {
     return (
       <div className="dashboard-welcome">
-        <h2>Welcome {userRole.charAt(0).toUpperCase() + userRole.slice(1)}</h2>
+        <h2>{userRole.charAt(0).toUpperCase() + userRole.slice(1)}</h2>
         <p>This is your personalized dashboard.</p>
       </div>
     );
@@ -174,7 +179,7 @@ const Dashboard = () => {
               {users.length > 0 ? (
                 users.map(user => (
                   <tr key={user.id}>
-                    <td>{user.email}</td>
+                    <td title={user.email}>{user.email}</td>
                     <td>{user.role}</td>
                     <td>
                       <button 
@@ -254,7 +259,8 @@ const Dashboard = () => {
             </div>
             {showRoleSelect && (
               <div className="form-group">
-                <select
+                {/* <label htmlFor="role">Role</label> */}
+                <div
                   id="role"
                   name="role"
                   value={activeTab === 'admins' ? 'admin' : formData.role}
@@ -262,11 +268,11 @@ const Dashboard = () => {
                   disabled={activeTab === 'admins'}
                 >
                   {activeTab === 'admins' ? (
-                    <option value="admin">Admin</option>
+                    <option value="admin"></option>
                   ) : (
-                    <option value="user">User</option>
+                    <option value="user"></option>
                   )}
-                </select>
+                </div>
               </div>
             )}
             <div className="form-actions">
@@ -281,6 +287,9 @@ const Dashboard = () => {
     );
   };
 
+  // Calculate main content class based on sidebar state
+  const mainContentClass = `main-content ${!isSidebarOpen ? 'sidebar-closed' : ''}`;
+
   return (
     <div className="dashboard-container">
       <Sidebar 
@@ -288,8 +297,9 @@ const Dashboard = () => {
         activeTab={activeTab} 
         onTabChange={setActiveTab}
         onLogout={handleLogout}
+        onSidebarToggle={handleSidebarToggle}
       />
-      <div className="main-content">
+      <div className={mainContentClass}>
         <div className="content-area">
           {renderContent()}
         </div>
