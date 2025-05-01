@@ -121,8 +121,10 @@ exports.editUser = async (req, res) => {
 
     if (email) updateData.email = email;
     if (role) updateData.role = role;
-    if (name) updateData.name = name;
-    if (mobile) updateData.mobile = mobile;
+    if (typeof name !== 'undefined') updateData.name = name;
+    if (typeof mobile !== 'undefined') updateData.mobile = mobile;
+
+    // console.log("Update payload:", updateData); // Debugging line
 
     await userDoc.update(updateData);
     res.status(200).json({ message: 'User updated successfully' });
