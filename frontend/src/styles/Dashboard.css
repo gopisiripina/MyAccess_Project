@@ -164,7 +164,7 @@
 
 .users-table th,
 .users-table td {
-  padding: 16px 24px;
+  padding: 16px 12px; /* Reduced horizontal padding */
   text-align: left;
   border-bottom: 1px solid #e1e5eb;
   white-space: nowrap;
@@ -172,20 +172,31 @@
   text-overflow: ellipsis; /* Add ellipsis for text overflow */
 }
 
-/* Set fixed column widths */
+/* Updated column widths for 5 columns */
 .users-table th:nth-child(1),
 .users-table td:nth-child(1) {
-  width: 60%; /* Email column */
+  width: 30%; /* Email column */
 }
 
 .users-table th:nth-child(2),
 .users-table td:nth-child(2) {
-  width: 20%; /* Role column */
+  width: 15%; /* Name column */
 }
 
 .users-table th:nth-child(3),
 .users-table td:nth-child(3) {
+  width: 15%; /* Mobile column */
+}
+
+.users-table th:nth-child(4),
+.users-table td:nth-child(4) {
+  width: 10%; /* Role column */
+}
+
+.users-table th:nth-child(5),
+.users-table td:nth-child(5) {
   width: 20%; /* Actions column */
+  text-align: center;
 }
 
 .users-table th {
@@ -394,13 +405,14 @@
   
   .users-table {
     width: 100%;
-    min-width: 500px; /* Ensure minimum width for small screens */
+    min-width: 700px; /* Increased minimum width for small screens to fit 5 columns */
     table-layout: fixed; /* Keep fixed layout */
   }
   
   .users-table th,
   .users-table td {
-    padding: 12px 16px;
+    padding: 12px 10px; /* Even more compact padding for mobile */
+    font-size: 14px; /* Smaller font size for mobile */
   }
   
   /* Adjust headers for mobile */
@@ -445,6 +457,14 @@
     justify-content: center;
   }
   
+  /* Modified button styles for the action column */
+  .edit-button,
+  .delete-button {
+    padding: 6px 8px;
+    font-size: 12px;
+    margin: 2px;
+  }
+  
   /* Fix form actions on mobile */
   .form-actions {
     flex-direction: column;
@@ -487,17 +507,24 @@
   
   .users-table th,
   .users-table td {
-    padding: 14px 16px;
-    font-size: 15px;
+    padding: 14px 8px; /* Further reduced padding for iPhone */
+    font-size: 13px; /* Even smaller font for iPhone */
   }
   
   /* Ensure buttons are large enough for touch */
   .add-button,
-  .delete-button,
   .logout-button {
     min-width: 44px;
     min-height: 48px; /* Larger touch targets for iPhone */
     font-size: 15px;
+  }
+  
+  .edit-button,
+  .delete-button {
+    padding: 5px 6px;
+    font-size: 11px;
+    margin: 1px;
+    min-height: 32px;
   }
   
   /* Make modal better fit iPhone 14 Pro Max screen */
