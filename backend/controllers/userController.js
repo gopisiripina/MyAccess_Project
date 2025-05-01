@@ -1,27 +1,84 @@
-const admin = require('firebase-admin');
-const { db } = require('../firebase');  // ✅ Proper way
+const { db } = require('../firebase');
+const nodemailer = require('nodemailer');
+const crypto = require('crypto');
 
+// Configure nodemailer
+const transporter = nodemailer.createTransport({
+  // Replace with your email service config
+  service: 'gmail',
+  auth: {
+    user: process.env.EMAIL_USER || 'your-email@gmail.com',
+    pass: process.env.EMAIL_PASS || 'your-email-password'
+  }
+});
+
+// Send welcome email with credentials
+async function sendCredentialsEmail(email, password, role) {
+  const mailOptions = {
+    from: process.env.EMAIL_USER || 'your-email@gmail.com',
+    to: email,
+    subject: `Your New ${role.charAt(0).toUpperCase() + role.slice(1)} Account`,
+    html: `
+      <h1>Welcome!</h1>
+      <p>Your account has been created. Here are your login credentials:</p>
+      <p><strong>Email:</strong> ${email}</p>
+      <p><strong>Default Password:</strong> ${password}</p>
+      <p>For security reasons, you will be required to change your password upon first login.</p>
+    `
+  };
+
+  await transporter.sendMail(mailOptions);
+}
+
+// Helper function to check if user can perform action based on roles
+function canPerformAction(actorRole, targetRole) {
+  const roleHierarchy = { 'superadmin': 3, 'admin': 2, 'user': 1 };
+  
+  // An actor can only perform actions on users with lower role levels
+  return roleHierarchy[actorRole] > roleHierarchy[targetRole];
+}
 
 // Add new user or admin
 exports.addUser = async (req, res) => {
   const { email, password, role } = req.body;
   const creatorRole = req.headers.role; // Fetch role from header
+  const creatorId = req.headers.userid; // Fetch user ID from header
 
   if (!email || !password || !role) {
     return res.status(400).json({ message: 'Missing required fields' });
   }
 
   try {
-    // Admin cannot add admins
+    // Check if email already exists
+    const existingUser = await db.collection('users').where('email', '==', email).get();
+    if (!existingUser.empty) {
+      return res.status(400).json({ message: 'Email already in use' });
+    }
+
+    // Role-based restrictions
     if (creatorRole === 'admin' && role !== 'user') {
       return res.status(403).json({ message: 'Admins can only add users' });
     }
 
-    await db.collection('users').add({
+    if (creatorRole === 'superadmin' && !['admin', 'user'].includes(role)) {
+      return res.status(403).json({ message: 'Invalid role specified' });
+    }
+
+    // Generate a default password if not provided or if you want to enforce random passwords
+    const defaultPassword = password || crypto.randomBytes(6).toString('hex');
+
+    // Add user to Firestore
+    const userRef = await db.collection('users').add({
       email,
-      password,
-      role
+      password: defaultPassword,
+      role,
+      firstLogin: false, // Force password change on first login
+      createdBy: creatorId,
+      createdAt: new Date().toISOString()
     });
+
+    // Send email with credentials
+    await sendCredentialsEmail(email, defaultPassword, role);
 
     res.status(201).json({ message: `${role} added successfully` });
   } catch (error) {
@@ -33,8 +90,13 @@ exports.addUser = async (req, res) => {
 // Edit user
 exports.editUser = async (req, res) => {
   const { id } = req.params;
-  const { email, password, role } = req.body;
+  const { email, role } = req.body;
   const editorRole = req.headers.role;
+  const editorId = req.headers.userid;
+
+  if (!id) {
+    return res.status(400).json({ message: 'User ID is required' });
+  }
 
   try {
     const userDoc = db.collection('users').doc(id);
@@ -43,13 +105,28 @@ exports.editUser = async (req, res) => {
     if (!user.exists) {
       return res.status(404).json({ message: 'User not found' });
     }
-
-    // Admin cannot edit admins
-    if (editorRole === 'admin' && user.data().role !== 'user') {
-      return res.status(403).json({ message: 'Admins can only edit users' });
+    
+    const userData = user.data();
+    
+    // Check if editor has permission to edit this user
+    if (!canPerformAction(editorRole, userData.role)) {
+      return res.status(403).json({ message: `${editorRole} cannot edit ${userData.role}` });
     }
 
-    await userDoc.update({ email, password, role });
+    // Check if trying to change to a role that's not allowed
+    if (role && !canPerformAction(editorRole, role)) {
+      return res.status(403).json({ message: `Cannot change role to ${role}` });
+    }
+
+    const updateData = {
+      updatedBy: editorId,
+      updatedAt: new Date().toISOString()
+    };
+
+    if (email) updateData.email = email;
+    if (role) updateData.role = role;
+
+    await userDoc.update(updateData);
     res.status(200).json({ message: 'User updated successfully' });
 
   } catch (error) {
@@ -63,6 +140,10 @@ exports.deleteUser = async (req, res) => {
   const { id } = req.params;
   const deleterRole = req.headers.role;
 
+  if (!id) {
+    return res.status(400).json({ message: 'User ID is required' });
+  }
+
   try {
     const userDoc = db.collection('users').doc(id);
     const user = await userDoc.get();
@@ -70,10 +151,12 @@ exports.deleteUser = async (req, res) => {
     if (!user.exists) {
       return res.status(404).json({ message: 'User not found' });
     }
-
-    // Admin cannot delete admins
-    if (deleterRole === 'admin' && user.data().role !== 'user') {
-      return res.status(403).json({ message: 'Admins can only delete users' });
+    
+    const userData = user.data();
+    
+    // Check if deleter has permission to delete this user
+    if (!canPerformAction(deleterRole, userData.role)) {
+      return res.status(403).json({ message: `${deleterRole} cannot delete ${userData.role}` });
     }
 
     await userDoc.delete();
@@ -87,17 +170,59 @@ exports.deleteUser = async (req, res) => {
 
 // Get all users
 exports.getUsers = async (req, res) => {
+  const requestorRole = req.headers.role;
+  
   try {
     const usersRef = db.collection('users');
     const snapshot = await usersRef.get();
 
     const users = [];
     snapshot.forEach(doc => {
-      users.push({ id: doc.id, ...doc.data() });
+      const userData = doc.data();
+      
+      // Filter users based on requestor's role
+      if (requestorRole === 'superadmin' || 
+          (requestorRole === 'admin' && userData.role === 'user')) {
+        // Don't send passwords in response
+        const { password, resetToken, resetTokenExpiry, ...safeUserData } = userData;
+        users.push({ id: doc.id, ...safeUserData });
+      }
     });
 
     res.status(200).json(users);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: 'Server error' });
+  }
+};
 
+// Get single user by ID
+exports.getUserById = async (req, res) => {
+  const { id } = req.params;
+  const requestorRole = req.headers.role;
+  
+  if (!id) {
+    return res.status(400).json({ message: 'User ID is required' });
+  }
+  
+  try {
+    const userDoc = await db.collection('users').doc(id).get();
+    
+    if (!userDoc.exists) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+    
+    const userData = userDoc.data();
+    
+    // Check if requestor has permission to view this user
+    if (!canPerformAction(requestorRole, userData.role) && requestorRole !== userData.role) {
+      return res.status(403).json({ message: 'Access denied' });
+    }
+    
+    // Don't send sensitive data
+    const { password, resetToken, resetTokenExpiry, ...safeUserData } = userData;
+    
+    res.status(200).json({ id: userDoc.id, ...safeUserData });
   } catch (error) {
     console.error(error);
     res.status(500).json({ message: 'Server error' });
