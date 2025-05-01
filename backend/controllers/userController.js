@@ -40,22 +40,20 @@ function canPerformAction(actorRole, targetRole) {
 
 // Add new user or admin
 exports.addUser = async (req, res) => {
-  const { email, password, role } = req.body;
-  const creatorRole = req.headers.role; // Fetch role from header
-  const creatorId = req.headers.userid; // Fetch user ID from header
+  const { email, password, role, name, mobile } = req.body; // added name & mobile
+  const creatorRole = req.headers.role;
+  const creatorId = req.headers.userid;
 
-  if (!email || !password || !role) {
+  if (!email || !password || !role || !name || !mobile) {
     return res.status(400).json({ message: 'Missing required fields' });
   }
 
   try {
-    // Check if email already exists
     const existingUser = await db.collection('users').where('email', '==', email).get();
     if (!existingUser.empty) {
       return res.status(400).json({ message: 'Email already in use' });
     }
 
-    // Role-based restrictions
     if (creatorRole === 'admin' && role !== 'user') {
       return res.status(403).json({ message: 'Admins can only add users' });
     }
@@ -64,20 +62,19 @@ exports.addUser = async (req, res) => {
       return res.status(403).json({ message: 'Invalid role specified' });
     }
 
-    // Generate a default password if not provided or if you want to enforce random passwords
     const defaultPassword = password || crypto.randomBytes(6).toString('hex');
 
-    // Add user to Firestore
     const userRef = await db.collection('users').add({
       email,
       password: defaultPassword,
       role,
-      firstLogin: false, // Force password change on first login
+      name,
+      mobile,
+      firstLogin: false,
       createdBy: creatorId,
       createdAt: new Date().toISOString()
     });
 
-    // Send email with credentials
     await sendCredentialsEmail(email, defaultPassword, role);
 
     res.status(201).json({ message: `${role} added successfully` });
@@ -87,10 +84,11 @@ exports.addUser = async (req, res) => {
   }
 };
 
+
 // Edit user
 exports.editUser = async (req, res) => {
   const { id } = req.params;
-  const { email, role } = req.body;
+  const { email, role, name, mobile } = req.body; // added name & mobile
   const editorRole = req.headers.role;
   const editorId = req.headers.userid;
 
@@ -105,15 +103,13 @@ exports.editUser = async (req, res) => {
     if (!user.exists) {
       return res.status(404).json({ message: 'User not found' });
     }
-    
+
     const userData = user.data();
-    
-    // Check if editor has permission to edit this user
+
     if (!canPerformAction(editorRole, userData.role)) {
       return res.status(403).json({ message: `${editorRole} cannot edit ${userData.role}` });
     }
 
-    // Check if trying to change to a role that's not allowed
     if (role && !canPerformAction(editorRole, role)) {
       return res.status(403).json({ message: `Cannot change role to ${role}` });
     }
@@ -125,6 +121,8 @@ exports.editUser = async (req, res) => {
 
     if (email) updateData.email = email;
     if (role) updateData.role = role;
+    if (name) updateData.name = name;
+    if (mobile) updateData.mobile = mobile;
 
     await userDoc.update(updateData);
     res.status(200).json({ message: 'User updated successfully' });
@@ -134,6 +132,7 @@ exports.editUser = async (req, res) => {
     res.status(500).json({ message: 'Server error' });
   }
 };
+
 
 // Delete user
 exports.deleteUser = async (req, res) => {
