@@ -129,10 +129,10 @@ exports.forgotPassword = async (req, res) => {
     });
 
     // Create reset link (replace with your frontend URL)
-    const resetLink = `http://yourfrontend.com/reset-password?token=${resetToken}`;
+    const resetLink = `http://localhost:5000/reset-password?token=${resetToken}`;
 
     // Send email
-    const mailOptions = {
+    const mailOptions = { 
       from: process.env.EMAIL_USER || 'your-email@gmail.com',
       to: email,
       subject: 'Password Reset',
