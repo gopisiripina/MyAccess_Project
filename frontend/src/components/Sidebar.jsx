@@ -45,7 +45,7 @@ const Sidebar = ({ userRole, activeTab, onTabChange, onLogout, onSidebarToggle }
       { id: 'admins', label: 'Admins', icon: <FaCrown />, visible: userRole === 'superadmin' },
       { id: 'users', label: 'Users', icon: <HiUsers/>, visible: userRole === 'superadmin' || userRole === 'admin' }
     ];
-    
+      
     return menuItems.filter(item => item.visible);
   };
 

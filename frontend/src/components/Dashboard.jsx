@@ -352,8 +352,8 @@ const Dashboard = () => {
           <table className="users-table">
             <thead>
               <tr>
-                <th>Email</th>
                 <th>Name</th>
+                <th>Email</th>
                 <th>Mobile</th>
                 <th>Role</th>
                 <th>Actions</th>
@@ -365,8 +365,8 @@ const Dashboard = () => {
                   const userId = user._id || user.id; // Handle both MongoDB and Firestore ID formats
                   return (
                     <tr key={userId}>
+                      <td>{user.name || '-'}</td> 
                       <td>{user.email}</td>
-                      <td>{user.name || '-'}</td>
                       <td>{user.mobile || '-'}</td>
                       <td>{user.role}</td>
                       <td>
