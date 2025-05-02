@@ -1,21 +1,20 @@
 import React, { useState, useEffect } from 'react';
-import { Form, Input, Image, Button, Typography, message } from 'antd';
+import { Form, Input, Image, Button, Typography, message, Modal } from 'antd';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
-import '../styles/LoginPage.css'; // Make sure this path is correct
+import '../styles/LoginPage.css';
 import image from '../assets/img.jpg';
 const { Title, Text } = Typography;
 
 const LoginPage = () => {
   const [loading, setLoading] = useState(false);
+  const [changePasswordModalVisible, setChangePasswordModalVisible] = useState(false);
+  const [userIdForPasswordChange, setUserIdForPasswordChange] = useState(null);
+  const [currentPassword, setCurrentPassword] = useState('');
   const navigate = useNavigate();
   
-  // Add this effect to add the login-page-body class to the body only for this component
   useEffect(() => {
-    // Add the class when component mounts
     document.body.classList.add('login-page-body');
-    
-    // Remove the class when component unmounts to prevent affecting other pages
     return () => {
       document.body.classList.remove('login-page-body');
     };
@@ -25,14 +24,12 @@ const LoginPage = () => {
     try {
       setLoading(true);
       
-      // Add headers and format request properly
       const config = {
         headers: {
           'Content-Type': 'application/json',
         }
       };
       
-      // Make sure we have the right data format
       const loginData = {
         email: values.email,
         password: values.password
@@ -40,33 +37,23 @@ const LoginPage = () => {
       
       const res = await axios.post('http://localhost:5000/api/auth/login', loginData, config);
       
-      // Handle the response from your backend
       if (res.data) {
-        // Store user data in localStorage
+        if (res.data.requirePasswordChange) {
+          // Handle first-time login requiring password change
+          setUserIdForPasswordChange(res.data.userId);
+          setCurrentPassword(values.password); // Store the initial password
+          setChangePasswordModalVisible(true);
+          return;
+        }
+        
+        // Normal login flow
         localStorage.setItem('userId', res.data.user.id);
         localStorage.setItem('userEmail', res.data.user.email);
         localStorage.setItem('userRole', res.data.user.role);
-        
-        // Store the full user object as JSON string (optional, for additional data)
         localStorage.setItem('userData', JSON.stringify(res.data.user));
-        console.log('User data:', res.data.user.role);
         
         // Redirect based on user role
-        const userRole = res.data.user.role;
-        switch(userRole) {
-          case 'superadmin':
-            navigate('/superadmin-dashboard');
-            break;
-          case 'admin':
-            navigate('/admin-dashboard');
-            break;
-          case 'user':
-            navigate('/user-dashboard');
-            break;
-          default:
-            // Fallback to a default dashboard if role is not recognized
-            navigate('/dashboard');
-        }
+        redirectBasedOnRole(res.data.user.role);
         
         message.success(res.data.message || 'Login successful!');
       } else {
@@ -75,8 +62,71 @@ const LoginPage = () => {
       
     } catch (err) {
       console.error('Login failed:', err.response?.data?.message || err.message);
-      // Use Ant Design message for better UX
       message.error(err.response?.data?.message || 'Login failed. Please check your credentials.');
+    } finally {
+      setLoading(false);
+    }
+  };
+  const handleForgotPassword = () => {
+    navigate('/forgot');
+  };
+  
+  const redirectBasedOnRole = (role) => {
+    switch(role) {
+      case 'superadmin':
+        navigate('/superadmin-dashboard');
+        break;
+      case 'admin':
+        navigate('/admin-dashboard');
+        break;
+      case 'user':
+        navigate('/user-dashboard');
+        break;
+      default:
+        navigate('/dashboard');
+    }
+  };
+
+  const handlePasswordChange = async (values) => {
+    try {
+      setLoading(true);
+      
+      const config = {
+        headers: {
+          'Content-Type': 'application/json',
+        }
+      };
+      
+      const changePasswordData = {
+        userId: userIdForPasswordChange,
+        currentPassword: currentPassword,
+        newPassword: values.newPassword
+      };
+      
+      const res = await axios.post('http://localhost:5000/api/auth/change-password', changePasswordData, config);
+      
+      if (res.data) {
+        message.success(res.data.message || 'Password changed successfully!');
+        setChangePasswordModalVisible(false);
+        
+        // Automatically login with new credentials
+        const loginRes = await axios.post('http://localhost:5000/api/auth/login', {
+          email: localStorage.getItem('userEmail'),
+          password: values.newPassword
+        }, config);
+        
+        if (loginRes.data) {
+          localStorage.setItem('userId', loginRes.data.user.id);
+          localStorage.setItem('userEmail', loginRes.data.user.email);
+          localStorage.setItem('userRole', loginRes.data.user.role);
+          localStorage.setItem('userData', JSON.stringify(loginRes.data.user));
+          
+          redirectBasedOnRole(loginRes.data.user.role);
+        }
+      }
+    } catch (err) {
+      console.error('Password change failed:', err.response?.data?.message || err.message);
+      message.error(err.response?.data?.message || 'Password change failed. Please try again.');
     } finally {
       setLoading(false);
     }
@@ -111,13 +161,17 @@ const LoginPage = () => {
             </Form.Item>
             
             <Form.Item
-              name="password"
-              label="Password"
-              rules={[{ required: true, message: 'Please input your password!' }]}
-              extra={<div className="forgot-password">Forgot?</div>}
-            >
-              <Input.Password />
-            </Form.Item>
+  name="password"
+  label="Password"
+  rules={[{ required: true, message: 'Please input your password!' }]}
+  extra={
+    <div className="forgot-password" onClick={handleForgotPassword}>
+      Forgot?
+    </div>
+  }
+>
+  <Input.Password />
+</Form.Item>
             
             <Form.Item>
               <Button type="primary" htmlType="submit" loading={loading} block className="login-button">
@@ -125,10 +179,6 @@ const LoginPage = () => {
               </Button>
             </Form.Item>
           </Form>
-          
-          {/* <div className="login-footer">
-            <Text>Don't have an account? <a href="#" className="signup-link">Sign up</a></Text>
-          </div> */}
         </div>
       </div>
 
@@ -144,8 +194,59 @@ const LoginPage = () => {
           </div>
         </div>
       </div>
+
+      {/* Change Password Modal */}
+      <Modal
+        title="Change Your Password"
+        visible={changePasswordModalVisible}
+        onCancel={() => setChangePasswordModalVisible(false)}
+        footer={null}
+        closable={false}
+      >
+        <Form layout="vertical" onFinish={handlePasswordChange}>
+          <Form.Item
+            name="newPassword"
+            label="New Password"
+            rules={[
+              { required: true, message: 'Please input your new password!' },
+              { min: 8, message: 'Password must be at least 8 characters!' },
+              { 
+                pattern: /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/,
+                message: 'Password must contain at least one uppercase, one lowercase, one number and one special character!'
+              }
+            ]}
+          >
+            <Input.Password placeholder="Enter new password" />
+          </Form.Item>
+          
+          <Form.Item
+            name="confirmPassword"
+            label="Confirm New Password"
+            dependencies={['newPassword']}
+            rules={[
+              { required: true, message: 'Please confirm your new password!' },
+              ({ getFieldValue }) => ({
+                validator(_, value) {
+                  if (!value || getFieldValue('newPassword') === value) {
+                    return Promise.resolve();
+                  }
+                  return Promise.reject(new Error('The two passwords do not match!'));
+                },
+              }),
+            ]}
+          >
+            <Input.Password placeholder="Confirm new password" />
+          </Form.Item>
+          
+          <Form.Item>
+            <Button type="primary" htmlType="submit" loading={loading} block>
+              Change Password
+            </Button>
+          </Form.Item>
+        </Form>
+      </Modal>
     </div>
   );
 };
 
-export default LoginPage; 
+export default LoginPage;

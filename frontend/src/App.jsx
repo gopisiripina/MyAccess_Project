@@ -2,7 +2,8 @@ import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import LoginPage from './components/LoginPage';
 import Dashboard from './components/Dashboard';
-
+import Forgot from './components/Forgot';
+import ResetPassword from './components/ResetPassword';
 // Protected route component that checks if user is authenticated
 const ProtectedRoute = ({ element }) => {
   const isAuthenticated = !!localStorage.getItem('userId');
@@ -22,7 +23,8 @@ function App() {
       <Routes>
         {/* Public route */}
         <Route path="/" element={<LoginPage />} />
-        
+        <Route path="/forgot" element={<Forgot />} />
+        <Route path="/reset-password" element={<ResetPassword />} />
         {/* Protected dashboard route - same component for all roles */}
         <Route 
           path="/dashboard" 
