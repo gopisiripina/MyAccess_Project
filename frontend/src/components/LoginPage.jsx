@@ -198,7 +198,7 @@ const LoginPage = () => {
       {/* Change Password Modal */}
       <Modal
         title="Change Your Password"
-        visible={changePasswordModalVisible}
+        open={changePasswordModalVisible}
         onCancel={() => setChangePasswordModalVisible(false)}
         footer={null}
         closable={false}
