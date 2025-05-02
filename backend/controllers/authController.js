@@ -132,7 +132,7 @@ exports.forgotPassword = async (req, res) => {
     const resetLink = `http://localhost:5173/reset-password?token=${resetToken}`;
 
     // Send email
-    const mailOptions = {
+    const mailOptions = { 
       from: process.env.EMAIL_USER || 'your-email@gmail.com',
       to: email,
       subject: 'Password Reset',
