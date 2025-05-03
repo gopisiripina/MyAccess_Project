@@ -5,13 +5,14 @@ const {
   editUser, 
   deleteUser, 
   getUsers,
-  getUserById
+  getUserById,
+  uploadSingleImage  // Import this from your controller
 } = require('../controllers/userController');
 const { checkAuth } = require('../middleware/route');
 
 // User Routes with authentication middleware
-router.post('/add', checkAuth, addUser);
-router.patch('/edit/:id', checkAuth, editUser); // Changed from PUT to PATCH
+router.post('/add', checkAuth, uploadSingleImage, addUser);  // Add multer middleware here
+router.patch('/edit/:id', checkAuth, uploadSingleImage, editUser);  // Add multer middleware here
 router.delete('/delete/:id', checkAuth, deleteUser);
 router.get('/', checkAuth, getUsers);
 router.get('/:id', checkAuth, getUserById);

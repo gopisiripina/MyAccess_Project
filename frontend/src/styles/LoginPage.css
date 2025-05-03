@@ -1,4 +1,4 @@
-/* LoginPage.css - Enhanced responsive styling */
+/* LoginPage.css - Enhanced responsive styling with error message display */
 
 /* Base styling for the entire login page */
 .login-page {
@@ -61,6 +61,23 @@
   fill: white;
 }
 
+/* Error message styling */
+.error-message {
+  background-color: #fff2f0;
+  border: 1px solid #ffccc7;
+  border-radius: 8px;
+  padding: 10px 16px;
+  margin-bottom: 20px;
+  display: flex;
+  align-items: center;
+  animation: fadeIn 0.3s ease;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(-10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
 /* Form styling */
 .login-form-container {
   margin-top: 2.5rem;
@@ -103,6 +120,14 @@
 .login-form .ant-input-affix-wrapper-focused {
   border-color: #004225;
   box-shadow: 0 0 0 2px rgba(0, 66, 37, 0.2);
+}
+
+.login-form .ant-input-status-error {
+  border-color: #ff4d4f !important;
+}
+
+.login-form .ant-input-status-error:focus {
+  box-shadow: 0 0 0 2px rgba(255, 77, 79, 0.2) !important;
 }
 
 .forgot-password {
@@ -310,6 +335,11 @@
   .tagline-text img {
     max-width: 100%;
     height: auto;
+  }
+
+  .error-message {
+    padding: 8px 12px;
+    margin-bottom: 15px;
   }
 }
 

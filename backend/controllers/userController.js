@@ -1,7 +1,11 @@
 const { db } = require('../firebase');
 const nodemailer = require('nodemailer');
 const crypto = require('crypto');
-
+const path = require('path');
+const fs = require('fs');
+const cloudinary = require('cloudinary').v2;
+const { v4: uuidv4 } = require('uuid');
+const multer = require('multer');
 // Configure nodemailer
 const transporter = nodemailer.createTransport({
   // Replace with your email service config
@@ -38,9 +42,84 @@ function canPerformAction(actorRole, targetRole) {
   return roleHierarchy[actorRole] > roleHierarchy[targetRole];
 }
 
-// Add new user or admin
+// Create temporary uploads directory
+const uploadDir = path.join(__dirname, "temp_uploads");
+if (!fs.existsSync(uploadDir)) {
+  fs.mkdirSync(uploadDir, { recursive: true });
+}
+
+// Configure cloudinary
+cloudinary.config({
+  cloud_name: "dlycx8dw3",
+  api_key: "919845641398772",
+  api_secret: "l417YAil5CVtAypMoA4Il7ZpOIo"
+});
+
+// Configure multer for handling file uploads
+const storage = multer.diskStorage({
+  destination: function(req, file, cb) {
+    cb(null, uploadDir);
+  },
+  filename: function(req, file, cb) {
+    const uniqueFilename = `${uuidv4()}${path.extname(file.originalname)}`;
+    cb(null, uniqueFilename);
+  }
+});
+
+// File filter to accept only images
+const fileFilter = (req, file, cb) => {
+  if (file.mimetype.startsWith('image/')) {
+    cb(null, true);
+  } else {
+    cb(new Error('Not an image! Please upload only images.'), false);
+  }
+};
+
+const upload = multer({
+  storage: storage,
+  limits: {
+    fileSize: 5 * 1024 * 1024 // 5MB limit
+  },
+  fileFilter: fileFilter
+});
+
+// Helper function to upload file to Cloudinary
+const uploadToCloudinary = async (filePath, folder = 'users') => {
+  try {
+    const result = await cloudinary.uploader.upload(filePath, {
+      folder: folder,
+      use_filename: true,
+      unique_filename: true,
+      overwrite: false
+    });
+    
+    // Delete the local file after upload
+    fs.unlinkSync(filePath);
+    
+    return {
+      public_id: result.public_id,
+      url: result.secure_url,
+      width: result.width,
+      height: result.height
+    };
+  } catch (error) {
+    // Delete the local file if upload fails
+    if (fs.existsSync(filePath)) {
+      fs.unlinkSync(filePath);
+    }
+    throw error;
+  }
+};
+
+// Middleware to handle a single file upload
+exports.uploadSingleImage = upload.single('image');
+
+
+
+
+// Add user with image
 exports.addUser = async (req, res) => {
-  const { email, password, role, name, mobile } = req.body; // added name & mobile
+  const { email, password, role, name, mobile } = req.body;
   const creatorRole = req.headers.role;
   const creatorId = req.headers.userid;
 
@@ -63,8 +142,9 @@ exports.addUser = async (req, res) => {
     }
 
     const defaultPassword = password || crypto.randomBytes(6).toString('hex');
-
-    const userRef = await db.collection('users').add({
+    
+    // User data to be saved
+    const userData = {
       email,
       password: defaultPassword,
       role,
@@ -73,8 +153,21 @@ exports.addUser = async (req, res) => {
       firstLogin: false,
       createdBy: creatorId,
       createdAt: new Date().toISOString()
-    });
+    };
 
+    // Upload image to cloudinary if provided
+    if (req.file) {
+      try {
+        const imageResult = await uploadToCloudinary(req.file.path);
+        userData.profileImage = imageResult.url;
+        userData.profileImageId = imageResult.public_id;
+      } catch (uploadError) {
+        console.error('Error uploading image:', uploadError);
+        // Continue without image if upload fails
+      }
+    }
+
+    const userRef = await db.collection('users').add(userData);
     await sendCredentialsEmail(email, defaultPassword, role);
 
     res.status(201).json({ message: `${role} added successfully` });
@@ -85,10 +178,10 @@ exports.addUser = async (req, res) => {
 };
 
 
-// Edit user
+// Edit user with image
 exports.editUser = async (req, res) => {
   const { id } = req.params;
-  const { email, role, name, mobile } = req.body; // added name & mobile
+  const { email, role, name, mobile } = req.body;
   const editorRole = req.headers.role;
   const editorId = req.headers.userid;
 
@@ -124,7 +217,28 @@ exports.editUser = async (req, res) => {
     if (typeof name !== 'undefined') updateData.name = name;
     if (typeof mobile !== 'undefined') updateData.mobile = mobile;
 
-    // console.log("Update payload:", updateData); // Debugging line
+    // Handle image upload if provided
+    if (req.file) {
+      try {
+        // If user already has an image, delete it from Cloudinary
+        if (userData.profileImageId) {
+          try {
+            await cloudinary.uploader.destroy(userData.profileImageId);
+          } catch (deleteError) {
+            console.error('Error deleting previous image:', deleteError);
+            // Continue even if deletion fails
+          }
+        }
+        
+        // Upload new image
+        const imageResult = await uploadToCloudinary(req.file.path);
+        updateData.profileImage = imageResult.url;
+        updateData.profileImageId = imageResult.public_id;
+      } catch (uploadError) {
+        console.error('Error uploading image:', uploadError);
+        // Continue without changing image if upload fails
+      }
+    }
 
     await userDoc.update(updateData);
     res.status(200).json({ message: 'User updated successfully' });
@@ -134,7 +248,6 @@ exports.editUser = async (req, res) => {
     res.status(500).json({ message: 'Server error' });
   }
 };
-
 
 // Delete user
 exports.deleteUser = async (req, res) => {
@@ -169,7 +282,7 @@ exports.deleteUser = async (req, res) => {
   }
 };
 
-// Get all users
+// Get all users (unchanged)
 exports.getUsers = async (req, res) => {
   const requestorRole = req.headers.role;
   
@@ -196,6 +309,55 @@ exports.getUsers = async (req, res) => {
     res.status(500).json({ message: 'Server error' });
   }
 };
+
+
+// Delete image from Cloudinary
+exports.deleteUserImage = async (req, res) => {
+  const { id } = req.params;
+  const editorRole = req.headers.role;
+  const editorId = req.headers.userid;
+
+  if (!id) {
+    return res.status(400).json({ message: 'User ID is required' });
+  }
+
+  try {
+    const userDoc = db.collection('users').doc(id);
+    const user = await userDoc.get();
+
+    if (!user.exists) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+
+    const userData = user.data();
+
+    if (!canPerformAction(editorRole, userData.role)) {
+      return res.status(403).json({ message: `${editorRole} cannot edit ${userData.role}` });
+    }
+
+    // Check if user has a profile image
+    if (!userData.profileImageId) {
+      return res.status(404).json({ message: 'No profile image found' });
+    }
+
+    // Delete image from Cloudinary
+    await cloudinary.uploader.destroy(userData.profileImageId);
+
+    // Update user document in Firestore
+    await userDoc.update({
+      profileImage: null,
+      profileImageId: null,
+      updatedBy: editorId,
+      updatedAt: new Date().toISOString()
+    });
+
+    res.status(200).json({ message: 'Profile image deleted successfully' });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: 'Server error' });
+  }
+};
+
 
 // Get single user by ID
 exports.getUserById = async (req, res) => {

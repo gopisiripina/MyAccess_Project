@@ -10,11 +10,13 @@ const { Title, Text } = Typography;
 
 const LoginPage = () => {
   const [loading, setLoading] = useState(false);
+  const [errorMessage, setErrorMessage] = useState('');
   const navigate = useNavigate();
 
   const onFinish = async (values) => {
     try {
       setLoading(true);
+      setErrorMessage(''); // Clear previous error messages
 
       const config = {
         headers: {
@@ -49,12 +51,18 @@ const LoginPage = () => {
         message.success(res.data.message || 'Login successful!');
         navigate('/dashboard');
       } else {
-        message.error('Login failed: Invalid response from server');
+        setErrorMessage('Login failed: Invalid response from server');
       }
 
     } catch (err) {
       console.error('Login failed:', err.response?.data?.message || err.message);
-      message.error(err.response?.data?.message || 'Login failed. Please check your credentials.');
+      
+      // Check specifically for "Invalid credentials" message
+      if (err.response?.data?.message === "Invalid credentials") {
+        setErrorMessage("Invalid credentials");
+      } else {
+        setErrorMessage(err.response?.data?.message || 'Login failed. Please check your credentials.');
+      }
     } finally {
       setLoading(false);
     }
@@ -81,6 +89,12 @@ const LoginPage = () => {
           <Text type="secondary">Welcome to Fillianta – Let's log you in</Text>
 
           <div className="login-form-container">
+            {errorMessage && (
+              <div className="error-message">
+                <Text type="danger">{errorMessage}</Text>
+              </div>
+            )}
+            
             <Form layout="vertical" onFinish={onFinish} className="login-form">
               <Form.Item
                 name="email"
@@ -94,6 +108,7 @@ const LoginPage = () => {
                   prefix={<UserOutlined className="site-form-item-icon" />} 
                   placeholder="test@domain.com" 
                   size="large"
+                  status={errorMessage ? "error" : ""}
                 />
               </Form.Item>
 
@@ -111,6 +126,7 @@ const LoginPage = () => {
                   prefix={<LockOutlined className="site-form-item-icon" />}
                   placeholder="Enter your password"
                   size="large"
+                  status={errorMessage ? "error" : ""}
                 />
               </Form.Item>
 
