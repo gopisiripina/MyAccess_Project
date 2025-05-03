@@ -5,6 +5,7 @@ import { AiOutlineDashboard } from "react-icons/ai";
 import { FaCrown } from "react-icons/fa6";
 import { HiUsers } from "react-icons/hi";
 import { FaBars } from "react-icons/fa"; // Add this import for the hamburger icon
+import { FaMicrochip } from "react-icons/fa";
 
 const Sidebar = ({ userRole, activeTab, onTabChange, onLogout, onSidebarToggle }) => {
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
@@ -43,7 +44,8 @@ const Sidebar = ({ userRole, activeTab, onTabChange, onLogout, onSidebarToggle }
     const menuItems = [
       { id: 'dashboard', label: 'Dashboard', icon: <AiOutlineDashboard />, visible: true },
       { id: 'admins', label: 'Admins', icon: <FaCrown />, visible: userRole === 'superadmin' },
-      { id: 'users', label: 'Users', icon: <HiUsers/>, visible: userRole === 'superadmin' || userRole === 'admin' }
+      { id: 'users', label: 'Users', icon: <HiUsers/>, visible: userRole === 'superadmin' || userRole === 'admin' },
+      { id: 'devices', label: 'Devices', icon: <FaMicrochip />, visible: true } // Visible to all roles
     ];
       
     return menuItems.filter(item => item.visible);

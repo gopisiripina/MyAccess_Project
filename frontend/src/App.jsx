@@ -5,6 +5,9 @@ import ChangePassword from './components/ChangePassword';
 import Dashboard from './components/Dashboard';
 import Forgot from './components/Forgot';
 import ResetPassword from './components/ResetPassword';
+import ProjectDashboard from './components/ProjectDashboard';
+import AddProject from './components/AddProject';
+
 
 // Protected route component that checks if user is authenticated
 const ProtectedRoute = ({ element }) => {
@@ -33,14 +36,15 @@ function App() {
         
         {/* Protected dashboard route */}
         <Route 
-          path="/dashboard" 
-          element={<ProtectedRoute element={<Dashboard />} />} 
-        />
+          path="/dashboard" element={<ProtectedRoute element={<Dashboard />} />} />
         
         {/* Redirect old role-specific routes to unified dashboard */}
         <Route path="/superadmin-dashboard" element={<Navigate to="/dashboard" replace />} />
         <Route path="/admin-dashboard" element={<Navigate to="/dashboard" replace />} />
         <Route path="/user-dashboard" element={<Navigate to="/dashboard" replace />} />
+
+         <Route path="/project/:projectId" element={<ProtectedRoute element={<ProjectDashboard />} />} />
+         <Route path="/projects/add" element={<ProtectedRoute element={<AddProject />} />} />
         
         {/* Fallback route for any unmatched paths */}
         <Route path="*" element={<Navigate to="/" replace />} />
