@@ -45,10 +45,15 @@ const ResetPassword = () => {
         newPassword
       });
 
-      if (response.data.success) {
+      console.log('Reset response:', response.data);
+      
+      if (response.data && response.data.success) {
         setSuccess(true);
+        console.log('Password reset successful, will redirect in 3 seconds');
+        // Use a more reliable approach for redirection
         setTimeout(() => {
-          navigate('/');
+          console.log('Redirecting now...');
+          window.location.href = 'http://localhost:5173/';
         }, 3000);
       }
     } catch (err) {
@@ -59,11 +64,21 @@ const ResetPassword = () => {
     }
   };
 
+  // Using a more prominent success message display
   if (success) {
     return (
-      <div className="reset-success-container">
-        <h2>Password Reset Successful!</h2>
+      <div className="reset-success-container" style={{ 
+        padding: '20px', 
+        margin: '50px auto', 
+        maxWidth: '500px',
+        textAlign: 'center',
+        backgroundColor: '#e6f7e6',
+        borderRadius: '8px',
+        boxShadow: '0 2px 10px rgba(0,0,0,0.1)'
+      }}>
+        <h2 style={{ color: '#2e7d32' }}>Password Reset Successful!</h2>
         <p>You will be redirected to the login page shortly.</p>
+        <p>If you're not redirected automatically, <a href="http://localhost:5173/" style={{ color: '#2e7d32', fontWeight: 'bold' }}>click here</a>.</p>
       </div>
     );
   }
