@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
+import '../styles/ForgotPasswordPage.css';
 
 const ForgotPasswordPage = () => {
   const [loading, setLoading] = useState(false);
@@ -15,12 +16,12 @@ const ForgotPasswordPage = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-
+    
     if (!email) {
       setEmailError('Please input your email!');
       return;
     }
-
+    
     if (!validateEmail(email)) {
       setEmailError('Please enter a valid email!');
       return;
@@ -29,9 +30,7 @@ const ForgotPasswordPage = () => {
     try {
       setLoading(true);
       setEmailError('');
-
       await axios.post('http://localhost:5000/api/auth/forgot-password', { email });
-
       alert('Password reset link sent to your email!');
       navigate('/');
     } catch (err) {
@@ -43,55 +42,34 @@ const ForgotPasswordPage = () => {
   };
 
   return (
-    <div style={{ minHeight: '100vh', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
-      <div style={{ width: '100%', maxWidth: 400, padding: 24, border: '1px solid #ccc', borderRadius: 8 }}>
-        <h2 style={{ marginBottom: 16 }}>Reset Your Password</h2>
-        <p style={{ marginBottom: 24 }}>Enter your email to receive a reset link.</p>
-
-        <form onSubmit={handleSubmit}>
-          <div style={{ marginBottom: 16 }}>
-            <label htmlFor="email">Email</label><br />
+    <div className="forgot-password-container">
+      <div className="forgot-password-card">
+        <h2 className="card-title">Reset Your Password</h2>
+        <p className="card-description">Enter your email to receive a reset link.</p>
+        
+        <form onSubmit={handleSubmit} className="forgot-password-form">
+          <div className="form-group">
+            <label htmlFor="email">Email</label>
             <input
-              type="email"
               id="email"
-              placeholder="test@domain.com"
+              type="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              style={{
-                width: '100%',
-                padding: 8,
-                borderRadius: 4,
-                border: emailError ? '1px solid red' : '1px solid #ccc',
-                marginTop: 4
-              }}
+              className={`form-input ${emailError ? 'input-error' : ''}`}
             />
             {emailError && (
-              <div style={{ color: 'red', fontSize: 12, marginTop: 4 }}>{emailError}</div>
+              <div className="error-message">{emailError}</div>
             )}
           </div>
-
-          <button
-            type="submit"
-            disabled={loading}
-            style={{
-              width: '100%',
-              padding: 10,
-              backgroundColor: '#1890ff',
-              color: '#fff',
-              border: 'none',
-              borderRadius: 4,
-              cursor: 'pointer'
-            }}
-          >
+          
+          <button type="submit" className="submit-button" disabled={loading}>
             {loading ? 'Sending...' : 'Send Reset Link'}
           </button>
         </form>
-
-        <div style={{ marginTop: 16, textAlign: 'center' }}>
-          <p>
-            Remember your password?{' '}
-            <a href="/" style={{ color: '#1890ff' }}>Log in</a>
-          </p>
+        
+        <div className="login-link">
+          <span>Remember your password?{' '}</span>
+          <a href="/login">Log in</a>
         </div>
       </div>
     </div>
