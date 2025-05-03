@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import Sidebar from './Sidebar';
 import '../styles/Dashboard.css';
+import ProjectsList from './ProjectsList';
 
 const Dashboard = () => {
   const [activeTab, setActiveTab] = useState('dashboard');
@@ -407,6 +408,8 @@ const Dashboard = () => {
         return userRole === 'superadmin' ? renderUsersList('Admins', true) : null;
       case 'users':
         return (userRole === 'superadmin' || userRole === 'admin') ? renderUsersList('Users') : null;
+        case 'devices':
+      return <ProjectsList userRole={userRole} />;
       default:
         return renderDashboardContent();
     }
