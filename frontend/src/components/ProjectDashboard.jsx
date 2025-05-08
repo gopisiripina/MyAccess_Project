@@ -70,10 +70,10 @@ const ProjectDashboard = () => {
       <div className="error-icon">!</div>
       <p>{error}</p>
       <button 
-        className="primary-button"
-        onClick={() => navigate('/projects')}
+        className="back-button"
+        onClick={() => navigate('/dashboard?tab=devices')}
       >
-        Back to Projects
+        <FiArrowLeft />Back to Projects
       </button>
     </div>
   );

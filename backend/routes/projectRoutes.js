@@ -7,7 +7,7 @@ const {
   updateProjectAccess,
   getProjectDashboard,
   updateDeviceStatus
-} = require('../controllers/projectController.js)'); // Fixed require path
+} = require('../controllers/projectController.js'); // Fixed require path
 const { checkAuth } = require('../middleware/route');
 
 // Project Routes

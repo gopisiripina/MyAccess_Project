@@ -6,9 +6,9 @@ html, body {
     margin: 0;
     padding: 0;
     display: flex;
-    justify-content: center;   /* center horizontally */
-    align-items: center;       /* center vertically */
-    background-color: #f0f2f5; /* optional background */
+    justify-content: center; 
+    align-items: center;       
+    /* background-color: #f0f2f5;  */
     font-family: sans-serif;
   }
   

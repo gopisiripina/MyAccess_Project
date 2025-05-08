@@ -73,7 +73,7 @@ const AddProject = () => {
                   value={formData.description}
                   onChange={handleInputChange}
                   rows="4"
-                />
+                style={{color:"black", background:"white"}}/>
               </div>
 
               {error && <div className="error-message">{error}</div>}

@@ -1,15 +1,22 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import '../styles/Sidebar.css';
 import { IoLogOutOutline } from "react-icons/io5";
 import { AiOutlineDashboard } from "react-icons/ai";
 import { FaCrown } from "react-icons/fa6";
 import { HiUsers } from "react-icons/hi";
-import { FaBars } from "react-icons/fa"; // Add this import for the hamburger icon
+import { FaBars, FaChevronLeft, FaChevronRight } from "react-icons/fa";
 import { FaMicrochip } from "react-icons/fa";
 
 const Sidebar = ({ userRole, activeTab, onTabChange, onLogout, onSidebarToggle }) => {
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
   const [isMobile, setIsMobile] = useState(false);
+  const navigate = useNavigate();
+
+  const handleTabClick = (tabId) => {
+    onTabChange(tabId);
+    navigate(`/dashboard?tab=${tabId}`);
+  };
 
   // Check if device is mobile
   useEffect(() => {
@@ -42,10 +49,10 @@ const Sidebar = ({ userRole, activeTab, onTabChange, onLogout, onSidebarToggle }
 
   const getMenuItems = () => {
     const menuItems = [
-      { id: 'dashboard', label: 'Dashboard', icon: <AiOutlineDashboard />, visible: true },
-      { id: 'admins', label: 'Admins', icon: <FaCrown />, visible: userRole === 'superadmin' },
-      { id: 'users', label: 'Users', icon: <HiUsers/>, visible: userRole === 'superadmin' || userRole === 'admin' },
-      { id: 'devices', label: 'Devices', icon: <FaMicrochip />, visible: true } // Visible to all roles
+      { id: 'dashboard', label: 'Dashboard', icon: <AiOutlineDashboard style={{ fontSize: '20px' }}/>, visible: true },
+      { id: 'admins', label: 'Admins', icon: <FaCrown style={{ fontSize: '20px' }}/>, visible: userRole === 'superadmin' },
+      { id: 'users', label: 'Users', icon: <HiUsers style={{ fontSize: '20px' }}/>, visible: userRole === 'superadmin' || userRole === 'admin' },
+      { id: 'devices', label: 'Devices', icon: <FaMicrochip style={{ fontSize: '20px' }}/>, visible: true } // Visible to all roles
     ];
       
     return menuItems.filter(item => item.visible);
@@ -62,7 +69,7 @@ const Sidebar = ({ userRole, activeTab, onTabChange, onLogout, onSidebarToggle }
   };
 
   // Determine sidebar classes based on state
-  const sidebarClasses = `sidebar ${!isSidebarOpen ? 'closed' : ''} ${isMobile ? 'mobile' : ''} ${isMobile && isSidebarOpen ? 'mobile-open' : ''}`;
+  const sidebarClasses = `sidebar ${!isSidebarOpen ? 'closed' : ''} ${isMobile ? (isSidebarOpen ? 'open' : '') : ''}`;
 
   return (
     <>
@@ -86,7 +93,7 @@ const Sidebar = ({ userRole, activeTab, onTabChange, onLogout, onSidebarToggle }
             </div>
           )}
           <button className="toggle-button" onClick={toggleSidebar}>
-            {isSidebarOpen ? '◄' : '►'}
+            {isSidebarOpen ? <FaChevronLeft /> : <FaChevronRight />}
           </button>
         </div>
 
@@ -97,9 +104,9 @@ const Sidebar = ({ userRole, activeTab, onTabChange, onLogout, onSidebarToggle }
                 <button
                   className={`menu-item ${activeTab === item.id ? 'active' : ''}`}
                   onClick={() => {
-                    onTabChange(item.id);
+                    handleTabClick(item.id);
                     if (isMobile) {
-                      setIsSidebarOpen(false); // Close sidebar after selection on mobile
+                      setIsSidebarOpen(false);
                     }
                   }}
                 >

@@ -15,7 +15,7 @@ const ProtectedRoute = ({ element }) => {
   
   // If user is not authenticated, redirect to login
   if (!isAuthenticated) {
-    return <Navigate to="/" replace />;
+    return <Navigate to="/"  state={{ from: window.location.pathname }} replace />;
   }
   
   // If authenticated, render the element
@@ -23,34 +23,38 @@ const ProtectedRoute = ({ element }) => {
 };
 
 function App() {
-  return (
-    <Router>
-      <Routes>
-        {/* Public routes */}
-        <Route path="/" element={<LoginPage />} />
-        <Route path="/forgot" element={<Forgot />} />
-        <Route path="/reset-password" element={<ResetPassword />} />
-        
-        {/* Change password route (semi-protected) */}
-        <Route path="/change-password" element={<ChangePassword />} />
-        
-        {/* Protected dashboard route */}
-        <Route 
-          path="/dashboard" element={<ProtectedRoute element={<Dashboard />} />} />
-        
-        {/* Redirect old role-specific routes to unified dashboard */}
-        <Route path="/superadmin-dashboard" element={<Navigate to="/dashboard" replace />} />
-        <Route path="/admin-dashboard" element={<Navigate to="/dashboard" replace />} />
-        <Route path="/user-dashboard" element={<Navigate to="/dashboard" replace />} />
-
-         <Route path="/project/:projectId" element={<ProtectedRoute element={<ProjectDashboard />} />} />
-         <Route path="/projects/add" element={<ProtectedRoute element={<AddProject />} />} />
-        
-        {/* Fallback route for any unmatched paths */}
-        <Route path="*" element={<Navigate to="/" replace />} />
-      </Routes>
-    </Router>
-  );
-}
+    return (
+      <Router>
+        <Routes>
+          {/* Public routes */}
+          <Route path="/" element={<LoginPage />} />
+          <Route path="/forgot" element={<Forgot />} />
+          <Route path="/reset-password" element={<ResetPassword />} />
+          
+          {/* Change password route */}
+          <Route path="/change-password" element={<ChangePassword />} />
+          
+          {/* Main protected routes */}
+          <Route path="/dashboard" element={<ProtectedRoute element={<Dashboard />} />}>
+            <Route index element={<Navigate to="/dashboard?tab=dashboard" replace />} />
+            <Route path="projects" element={<Navigate to="/dashboard?tab=devices" replace />} />
+          </Route>
+  
+          {/* Project routes */}
+          <Route path="/project/:projectId" element={<ProtectedRoute element={<ProjectDashboard />} />}/>
+          <Route path="/projects/add" element={<ProtectedRoute element={<AddProject />} />}/>
+          
+          {/* Redirects */}
+          <Route path="/superadmin-dashboard" element={<Navigate to="/dashboard" replace />} />
+          <Route path="/admin-dashboard" element={<Navigate to="/dashboard" replace />} />
+          <Route path="/user-dashboard" element={<Navigate to="/dashboard" replace />} />
+          <Route path="/projects" element={<Navigate to="/dashboard?tab=devices" replace />} />
+          
+          {/* Fallback */}
+          <Route path="*" element={<Navigate to="/" replace />} />
+        </Routes>
+      </Router>
+    );
+  }
 
 export default App;

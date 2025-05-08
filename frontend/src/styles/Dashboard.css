@@ -1,6 +1,11 @@
-/* Dashboard.css */
+/* Dashboard.css - Fully Responsive Version */
 
-/* General layout */
+/* ============= Blue Theme ============= */
+  /* background-color: #4299e1; */
+  /* background-color: #3182ce; */
+/* ====================================== */
+
+/* ============= GENERAL LAYOUT ============= */
 .dashboard-container {
   width: 100%;
   display: flex;
@@ -12,22 +17,12 @@
 }
 
 /* Sidebar */
-.sidebar {
-  width: 250px;
-  min-width: 250px;
-  background-color: #2c3e50;
-  color: #ecf0f1;
-  display: flex;
-  flex-direction: column;
-  position: fixed;
-  left: 0;
-  top: 0;
-  bottom: 0;
-  z-index: 100;
-  transition: transform 0.3s ease;
-  overflow-y: auto;
-  height: 100vh;
-  transform: translateX(0);
+
+
+/* Collapsed sidebar */
+.sidebar.collapsed {
+  transform: translateX(-100%);
+  min-width: 0;
 }
 
 /* Main content area */
@@ -35,21 +30,28 @@
   flex: 1;
   display: flex;
   flex-direction: column;
-  margin-left: 250px;
+  margin-left: 20%; /* Match sidebar width */
   min-height: 100vh;
-  width: calc(100vw - 250px); /* Full viewport width minus sidebar */
-  max-width: calc(100vw - 250px);
-  overflow-x: hidden; /* Prevent horizontal scroll */
+  width: 80%; /* Remaining width */
+  max-width: 100%;
+  overflow-x: hidden;
+  transition: all 0.3s ease; /* Add transition for smooth sidebar toggle */
+}
+
+/* When sidebar is closed */
+.main-content.sidebar-closed {
+  margin-left: 5%;
+  width: 100%;
 }
 
 .top-bar {
-  height: 64px;
+  height: 4rem;
   background-color: #fff;
   border-bottom: 1px solid #e8e8e8;
   display: flex;
   align-items: center;
   justify-content: flex-end;
-  padding: 0 20px;
+  padding: 0 2%;
   box-shadow: 0 1px 4px rgba(0, 0, 0, 0.05);
   position: sticky;
   top: 0;
@@ -58,7 +60,7 @@
 
 .content-area {
   flex: 1;
-  padding: 24px;
+  padding: 2%;
   overflow-y: auto;
   background-color: #f5f6fa;
   width: 100%;
@@ -70,7 +72,7 @@
 .user-info {
   display: flex;
   align-items: center;
-  gap: 16px;
+  gap: 5%;
 }
 
 .user-info span {
@@ -82,10 +84,10 @@
   background-color: transparent;
   color: #e53e3e;
   border: 1px solid #e53e3e;
-  border-radius: 4px;
-  padding: 6px 12px;
+  border-radius: 0.25rem;
+  padding: 0.5rem 0.75rem;
   cursor: pointer;
-  font-size: 14px;
+  font-size: 0.875rem;
   transition: all 0.2s ease;
 }
 
@@ -97,28 +99,220 @@
 /* Dashboard welcome section */
 .dashboard-welcome {
   background-color: white;
-  border-radius: 8px;
-  padding: 24px;
+  border-radius: 0.5rem;
+  padding: 1.5rem;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
 }
 
 .dashboard-welcome h2 {
   color: #2d3748;
   margin-top: 0;
-  margin-bottom: 16px;
+  margin-bottom: 1rem;
 }
 
 .dashboard-welcome p {
   color: #718096;
-  font-size: 16px;
+  font-size: 1rem;
   margin: 0;
 }
 
-/* Users list styling */
+/* Profile image upload */
+.image-upload-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-bottom: 1.25rem;
+}
+
+.image-preview-wrapper {
+  width: 6.25rem;
+  height: 6.25rem;
+  border-radius: 50%;
+  overflow: hidden;
+  margin-bottom: 0.625rem;
+  border: 2px solid #e2e8f0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: #f7fafc;
+}
+
+.image-preview {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.image-placeholder {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: #edf2f7;
+  color: #718096;
+  font-size: 0.875rem;
+}
+
+.image-input {
+  display: none; /* Hide the default file input */
+}
+
+.image-input-label {
+  background-color: #0a7048;
+  color: white !important;
+  padding: 0.5rem 1rem;
+  border-radius: 0.25rem;
+  cursor: pointer;
+  font-weight: 500;
+  transition: background-color 0.2s ease;
+  text-align: center;
+  margin-top: 0.625rem;
+}
+
+.image-input-label:hover {
+  background-color: #0e8c58;
+}
+
+/* Loading button */
+.loading-button {
+  position: relative;
+  min-width: 5rem;
+}
+
+.button-loading-content {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+}
+
+.button-spinner {
+  display: inline-block;
+  width: 1rem;
+  height: 1rem;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  border-radius: 50%;
+  border-top-color: #ffffff;
+  animation: spin 0.8s linear infinite;
+}
+
+/* Enhanced loading animation styles */
+.loading-row-placeholder {
+  background-color: #f7fafc;
+  height: 3.75rem;
+  border-bottom: 1px solid #e1e5eb;
+  animation: pulse 1.5s infinite ease-in-out;
+}
+
+.loading-cell-content {
+  height: 1rem;
+  background-color: #0e8c58;
+  border-radius: 0.25rem;
+  margin: 0.5rem 0;
+  width: 80%;
+  animation: shimmer 2s infinite linear;
+  background: linear-gradient(to right, #e2e8f0 0%, #0e8c58 50%, #e2e8f0 100%);
+  /* background: linear-gradient(to right, #f0f4f8 0%, #d9e2ec 50%, #f0f4f8 100%); */
+  background-size: 62.5rem 100%;
+}
+
+/* Shimmer effect */
+@keyframes shimmer {
+  0% {
+    background-position: -62.5rem 0;
+  }
+  100% {
+    background-position: 62.5rem 0;
+  }
+}
+
+/* Enhanced pulse animation for loading effect */
+@keyframes pulse {
+  0% { opacity: 0.7; }
+  50% { opacity: 1; }
+  100% { opacity: 0.7; }
+}
+
+.loading-pulse {
+  animation: pulse 1.5s infinite ease-in-out;
+}
+
+/* Enhanced spinner animation */
+.spinner {
+  width: 2.5rem;
+  height: 2.5rem;
+  border: 0.25rem solid rgba(66, 153, 225, 0.2);
+  border-radius: 50%;
+  border-top-color: #4299e1;
+  animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+/* Loading text improvement */
+.loading-text {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  color: #4a5568;
+  font-size: 1rem;
+  font-weight: 500;
+  margin-top: 1rem;
+  letter-spacing: 0.03125rem;
+}
+
+/* Form actions for better button spacing */
+.form-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.75rem;
+  margin-top: 1.5rem;
+}
+
+.form-actions button {
+  padding: 0.5rem 1rem;
+  border-radius: 0.25rem;
+  font-weight: 500;
+  cursor: pointer;
+  min-width: 5rem;
+  position: relative;
+  transition: all 0.2s ease;
+}
+
+.form-actions button[type="button"] {
+  background-color: transparent;
+  border: 1px solid #cbd5e0;
+  color: #4a5568;
+}
+
+.form-actions button[type="submit"] {
+  background-color: #0e8c58;
+  border: none;
+  color: white;
+}
+
+.form-actions button[type="button"]:hover:not(:disabled) {
+  background-color: #edf2f7;
+}
+
+.form-actions button[type="submit"]:hover:not(:disabled) {
+  background-color: #3182ce;
+}
+
+.form-actions button:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+}
+
+/* ============= USERS LIST SECTION ============= */
 .users-list-container {
   color: #000;
   background-color: rgb(255, 255, 255);
-  border-radius: 8px;
+  border-radius: 0.5rem;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
   overflow: hidden;
   width: 100%;
@@ -129,22 +323,22 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 16px 24px;
+  padding: 1rem 1.5rem;
   border-bottom: 1px solid #e1e5eb;
 }
 
 .users-header h2 {
   color: #2d3748;
   margin: 0;
-  font-size: 20px;
+  font-size: 1.25rem;
 }
 
 .add-button {
-  background-color: #4299e1;
+  background-color: #0a7048;
   color: white;
   border: none;
-  border-radius: 4px;
-  padding: 8px 16px;
+  border-radius: 0.25rem;
+  padding: 0.5rem 1rem;
   cursor: pointer;
   font-weight: 500;
   transition: background-color 0.2s ease;
@@ -152,73 +346,164 @@
 }
 
 .add-button:hover {
-  background-color: #3182ce;
+  background-color: #0e8c58;
 }
 
-/* Table styling */
+/* Table container for horizontal scrolling */
+.table-container {
+  width: 100%;
+  overflow-x: auto;
+  border: 1px solid #e1e5eb;
+  border-radius: 0.5rem;
+  -webkit-overflow-scrolling: touch; /* Smoother scrolling on iOS */
+}
+
+/* ============= TABLE STYLES ============= */
 .users-table {
   width: 100%;
   border-collapse: collapse;
-  table-layout: fixed; /* Fixed table layout to control column widths */
+  table-layout: fixed;
+  margin-bottom: 0;
 }
 
 .users-table th,
 .users-table td {
-  padding: 16px 12px; /* Reduced horizontal padding */
+  padding: 0.75rem 1rem;
   text-align: left;
   border-bottom: 1px solid #e1e5eb;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis; /* Add ellipsis for text overflow */
+  vertical-align: middle;
+  box-sizing: border-box;
 }
 
-/* Updated column widths for 5 columns */
+.users-table td:nth-child(1) {
+  overflow: visible;
+}
+
+/* Standardized column widths with percentages */
 .users-table th:nth-child(1),
 .users-table td:nth-child(1) {
-  width: 30%; /* Email column */
+  width: 15%;
+  padding-left: 1.25rem;
 }
 
 .users-table th:nth-child(2),
 .users-table td:nth-child(2) {
-  width: 15%; /* Name column */
+  width: 25%;
 }
 
 .users-table th:nth-child(3),
 .users-table td:nth-child(3) {
-  width: 15%; /* Mobile column */
+  width: 15%;
 }
 
 .users-table th:nth-child(4),
 .users-table td:nth-child(4) {
-  width: 10%; /* Role column */
+  width: 10%;
 }
 
 .users-table th:nth-child(5),
 .users-table td:nth-child(5) {
-  width: 20%; /* Actions column */
-  text-align: center;
+  width: 20%;
+  padding-right: 1.25rem;
 }
 
+/* Table header styling */
 .users-table th {
   font-weight: 600;
   color: #4a5568;
   background-color: #f7fafc;
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  box-shadow: 0 1px 0 rgba(0, 0, 0, 0.05);
+  padding-top: 0.875rem;
+  padding-bottom: 0.875rem;
+}
+
+/* Row hover effect */
+.users-table tbody tr {
+  transition: background-color 0.2s ease;
 }
 
 .users-table tbody tr:hover {
-  background-color: #f7fafc;
+  background-color: #edf2f7;
+}
+
+/* User name cell styling */
+.user-name-cell {
+  display: flex;
+  align-items: center;
+  padding: 0.75rem 1rem;
+  min-width: 9.375rem;
+}
+
+.user-avatar {
+  width: 2.25rem;
+  height: 2.25rem;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 2px solid #e2e8f0;
+  margin-right: 0.75rem;
+  flex-shrink: 0;
+}
+
+.user-avatar-placeholder {
+  width: 2.25rem;
+  height: 2.25rem;
+  border-radius: 50%;
+  background-color: #0e8c58;
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 600;
+  font-size: 0.875rem;
+  margin-right: 0.75rem;
+  flex-shrink: 0;
+}
+
+.user-name {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  font-weight: 500;
+  max-width: calc(100% - 3rem);
+}
+
+/* Action buttons */
+.action-buttons {
+  display: flex;
+  gap: 0.5rem;
+  justify-content: flex-start; /* Fixed alignment issue */
+}
+
+.edit-button, .delete-button {
+  min-width: 3.75rem;
+  padding: 0.375rem 0.75rem;
+  text-align: center;
+  font-size: 0.875rem;
+  border-radius: 0.25rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+}
+
+.edit-button {
+  background-color: transparent;
+  color: #38a169;
+  border: 1px solid #38a169;
+  margin-right: 0.3125rem;
+}
+
+.edit-button:hover {
+  background-color: #38a169;
+  color: white;
 }
 
 .delete-button {
   background-color: transparent;
   color: #e53e3e;
   border: 1px solid #e53e3e;
-  border-radius: 4px;
-  padding: 6px 12px;
-  cursor: pointer;
-  font-size: 14px;
-  transition: all 0.2s ease;
-  white-space: nowrap;
 }
 
 .delete-button:hover {
@@ -226,25 +511,25 @@
   color: white;
 }
 
-.edit-button{
-  margin: 5px;
-  background-color: transparent;
-  color: #65e53e;
-  border: 1px solid #65e53e;
-  border-radius: 4px;
-  padding: 6px 12px;
-  cursor: pointer;
-  font-size: 14px;
-  transition: all 0.2s ease;
-  white-space: nowrap;
+/* ============= LOADING ANIMATION ============= */
+.loading-container {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 2.5rem 0;
 }
 
-.edit-button:hover {
-  background-color: #65e53e;
-  color: white;
+.loading-spinner {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 6.25rem;
+  width: 100%;
 }
 
-/* Modal styling */
+/* ============= MODAL STYLING ============= */
 .modal-overlay {
   position: fixed;
   top: 0;
@@ -260,9 +545,9 @@
 
 .modal {
   background-color: white;
-  border-radius: 8px;
+  border-radius: 0.5rem;
   width: 90%;
-  max-width: 500px;
+  max-width: 31.25rem;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
   overflow: hidden;
 }
@@ -271,7 +556,7 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 16px 24px;
+  padding: 1rem 1.5rem;
   border-bottom: 1px solid #e1e5eb;
 }
 
@@ -283,7 +568,7 @@
 .close-button {
   background: none;
   border: none;
-  font-size: 24px;
+  font-size: 1.5rem;
   cursor: pointer;
   color: #a0aec0;
 }
@@ -293,16 +578,16 @@
 }
 
 .modal form {
-  padding: 24px;
+  padding: 1.5rem;
 }
 
 .form-group {
-  margin-bottom: 16px;
+  margin-bottom: 1rem;
 }
 
 .form-group label {
   display: block;
-  margin-bottom: 8px;
+  margin-bottom: 0.5rem;
   font-weight: 500;
   color: #4a5568;
 }
@@ -312,11 +597,11 @@
   color: #000;
   background-color: #fff;
   width: 100%;
-  padding: 8px 8px;
+  padding: 0.5rem 0.5rem;
   border: 1px solid #e1e5eb;
-  border-radius: 4px;
-  font-size: 16px;
-  box-sizing: border-box; /* Ensure padding doesn't affect width */
+  border-radius: 0.25rem;
+  font-size: 1rem;
+  box-sizing: border-box;
 }
 
 .form-group input:focus,
@@ -326,116 +611,136 @@
   box-shadow: 0 0 0 3px rgba(66, 153, 225, 0.2);
 }
 
-.form-actions {
-  display: flex;
-  justify-content: flex-end;
-  gap: 12px;
-  margin-top: 24px;
-}
-
-.form-actions button {
-  padding: 8px 16px;
-  border-radius: 4px;
-  font-weight: 500;
-  cursor: pointer;
-}
-
-.form-actions button[type="button"] {
-  background-color: transparent;
-  border: 1px solid #cbd5e0;
-  color: #4a5568;
-}
-
-.form-actions button[type="submit"] {
-  background-color: #4299e1;
-  border: none;
-  color: white;
-}
-
-.form-actions button[type="button"]:hover {
-  background-color: #edf2f7;
-}
-
-.form-actions button[type="submit"]:hover {
-  background-color: #3182ce;
-}
-
-.form-actions button:disabled {
-  opacity: 0.7;
-  cursor: not-allowed;
-}
-
 .error-message {
   color: #e53e3e;
-  padding: 16px 24px;
+  padding: 1rem 1.5rem;
 }
 
-/* Mobile responsiveness - general mobile and tablet devices */
-@media screen and (max-width: 844px) {
-  /* Reset the wide container for mobile */
-  .dashboard-container {
-    width: 100%;
-    flex-direction: column;
+.no-results {
+  text-align: center;
+  padding: 1.5rem;
+  color: #718096;
+}
+
+/* ============= MOBILE RESPONSIVENESS ============= */
+/* Tablet devices */
+@media screen and (max-width: 64rem) { /* 1024px */
+  .sidebar {
+    width: 25%;
+    min-width: 12rem;
   }
   
-  /* Adjust main content to account for bottom navigation */
   .main-content {
-    margin-left: 0;
+    margin-left: 25%;
+    width: 75%;
+  }
+  
+  .users-table th:nth-child(3),
+  .users-table td:nth-child(3) {
+    width: 20%;
+  }
+}
+
+/* Small tablets and large phones */
+@media screen and (max-width: 52.75rem) { /* 844px */
+  /* Reset layout for mobile */
+  .sidebar {
     width: 100%;
+    min-width: 100%;
     max-width: 100%;
-    padding-bottom: 75px; /* Increased height for iPhone navigation */
+    position: fixed;
+    height: 100%;
+    transform: translateX(-100%);
+    z-index: 200;
   }
   
-  /* Make top bar more compact */
+  .sidebar.visible {
+    transform: translateX(0);
+  }
+  
+  /* Fix for main content when sidebar is closed - prevent content shifting */
+  .main-content {
+    margin-left: 0 !important;
+    width: 100% !important;
+    max-width: 100%;
+    padding-bottom: 4.6875rem;
+  }
+  
   .top-bar {
-    height: 56px;
-    padding: 0 16px;
+    height: 3.5rem;
+    padding: 0 1rem;
   }
   
-  /* Adjust content padding */
   .content-area {
-    padding: 16px;
+    padding: 1rem;
   }
   
-  /* Make tables scroll horizontally */
-  .users-list-container {
-    overflow-x: auto; /* Enable horizontal scroll for container */
-    max-width: 100%;
+  /* Improved table horizontal scrolling for mobile */
+  .table-container {
+    margin: 0;
+    width: 100%;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
   }
   
   .users-table {
+    min-width: 43.75rem; /* For horizontal scroll */
     width: 100%;
-    min-width: 700px; /* Increased minimum width for small screens to fit 5 columns */
-    table-layout: fixed; /* Keep fixed layout */
+    table-layout: fixed;
   }
   
   .users-table th,
   .users-table td {
-    padding: 12px 10px; /* Even more compact padding for mobile */
-    font-size: 14px; /* Smaller font size for mobile */
+    padding: 1rem 0.75rem;
   }
   
-  /* Adjust headers for mobile */
+  /* Adjusted user header */
   .users-header {
     flex-direction: column;
     align-items: flex-start;
-    gap: 12px;
-    padding: 16px;
+    gap: 0.75rem;
+    padding: 1rem;
   }
   
   .users-header h2 {
-    margin-bottom: 8px;
+    margin-bottom: 0.5rem;
   }
   
-  /* Make form elements more touch-friendly */
-  .form-group input,
-  .form-group select,
-  .form-actions button {
-    padding: 12px;
-    font-size: 16px; /* Prevent zoom on iOS */
+  /* Loading adjustments */
+  .spinner {
+    width: 2.5rem;
+    height: 2.5rem;
+    border-width: 0.25rem;
   }
   
-  /* Adjust modal for mobile */
+  .loading-text {
+    font-size: 0.875rem;
+  }
+  
+  /* Avatar adjustments */
+  .user-avatar,
+  .user-avatar-placeholder {
+    width: 2rem;
+    height: 2rem;
+    margin-right: 0.5rem;
+  }
+  
+  /* Action buttons adjustment - fix alignment */
+  .action-buttons {
+    display: flex;
+    justify-content: flex-start;
+    gap: 0.5rem;
+  }
+  
+  .edit-button, 
+  .delete-button {
+    min-width: 3.125rem;
+    padding: 0.3125rem 0.5rem;
+    font-size: 0.8125rem;
+    margin-right: 0;
+  }
+  
+  /* Form and modal adjustments */
   .modal {
     width: 95%;
     max-height: 90vh;
@@ -443,122 +748,144 @@
   }
   
   .modal form {
-    padding: 16px;
+    padding: 1rem;
   }
   
-  /* Make buttons more touch-friendly */
+  .form-group input,
+  .form-group select,
+  .form-actions button {
+    padding: 0.75rem;
+    font-size: 1rem;
+  }
+  
+  /* Buttons more touch-friendly */
   .add-button,
-  .delete-button,
   .logout-button {
-    padding: 8px 12px;
-    min-height: 44px; /* Better touch target */
+    padding: 0.5rem 0.75rem;
+    min-height: 2.75rem;
     display: flex;
     align-items: center;
     justify-content: center;
   }
   
-  /* Modified button styles for the action column */
-  .edit-button,
-  .delete-button {
-    padding: 6px 8px;
-    font-size: 12px;
-    margin: 2px;
-  }
-  
-  /* Fix form actions on mobile */
+  /* Stack form actions */
   .form-actions {
     flex-direction: column;
-    gap: 8px;
+    gap: 0.5rem;
   }
   
   .form-actions button {
     width: 100%;
-    min-height: 44px;
+    min-height: 2.75rem;
   }
 }
 
-/* iPhone 14 Pro Max specific adjustments - 430px width */
-@media screen and (max-width: 430px) {
-  /* Additional padding to account for iPhone home indicator */
+/* iPhone and small phones */
+@media screen and (max-width: 26.875rem) { /* 430px */
+  /* Enhanced padding for iPhone */
   .main-content {
-    padding-bottom: calc(75px + env(safe-area-inset-bottom));
-  }
-  
-  .dashboard-welcome,
-  .users-list-container {
-    border-radius: 8px;
+    padding-bottom: calc(4.6875rem + env(safe-area-inset-bottom));
   }
   
   .content-area {
-    padding: 14px;
+    padding: 0.875rem;
   }
   
   .dashboard-welcome {
-    padding: 18px;
+    padding: 1.125rem;
   }
   
   .dashboard-welcome h2 {
-    font-size: 22px;
+    font-size: 1.375rem;
   }
   
   .users-header h2 {
-    font-size: 20px;
+    font-size: 1.25rem;
   }
   
+  /* Smaller table elements */
   .users-table th,
   .users-table td {
-    padding: 14px 8px; /* Further reduced padding for iPhone */
-    font-size: 13px; /* Even smaller font for iPhone */
+    padding: 0.625rem 0.375rem;
+    font-size: 0.8125rem;
   }
   
-  /* Ensure buttons are large enough for touch */
+  /* Smaller loading spinner */
+  .spinner {
+    width: 2.1875rem;
+    height: 2.1875rem;
+    border-width: 0.1875rem;
+  }
+  
+  .loading-text {
+    font-size: 0.8125rem;
+  }
+  
+  /* Smaller avatars */
+  .user-avatar,
+  .user-avatar-placeholder {
+    width: 1.75rem;
+    height: 1.75rem;
+    margin-right: 0.375rem;
+  }
+  
+  .user-name {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    font-weight: 500;
+    max-width: calc(100% - 2.5rem);
+  }
+  
+  /* Improved button sizing */
   .add-button,
   .logout-button {
-    min-width: 44px;
-    min-height: 48px; /* Larger touch targets for iPhone */
-    font-size: 15px;
+    min-width: 2.75rem;
+    min-height: 3rem;
+    font-size: 0.9375rem;
   }
   
   .edit-button,
   .delete-button {
-    padding: 5px 6px;
-    font-size: 11px;
-    margin: 1px;
-    min-height: 32px;
+    padding: 0.25rem 0.5rem;
+    font-size: 0.75rem;
+    min-width: 2.5rem;
   }
   
-  /* Make modal better fit iPhone 14 Pro Max screen */
+  /* Refined modal */
   .modal {
     width: 92%;
-    border-radius: 12px;
+    border-radius: 0.75rem;
   }
   
   .modal-header {
-    padding: 18px 24px;
+    padding: 1.125rem 1.5rem;
   }
   
   .modal form {
-    padding: 20px;
+    padding: 1.25rem;
   }
   
-  /* Improved form element sizing for iPhone */
+  /* Improved form elements */
   .form-group input,
   .form-group select {
-    padding: 14px 12px;
-    border-radius: 8px;
+    padding: 0.875rem 0.75rem;
+    border-radius: 0.5rem;
   }
   
   .form-actions button {
-    min-height: 48px;
-    border-radius: 8px;
+    min-height: 3rem;
+    border-radius: 0.5rem;
   }
   
-  /* Fix user info display */
+  /* User info display */
   .user-info {
-    gap: 12px;
+    gap: 0.75rem;
   }
   
   .user-info span {
-    font-size: 15px;
+    font-size: 0.9375rem;
   }
 }
+
+

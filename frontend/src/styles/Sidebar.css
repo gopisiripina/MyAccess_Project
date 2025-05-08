@@ -1,10 +1,24 @@
-/* Sidebar.css */
+/* Sidebar.css - Improved responsive design with percentage-based values */
 
+/* Define color variables for easy updating */
+:root {
+  --sidebar-primary: #004225; /* Dark green for main background */
+  --sidebar-secondary: #0e8c58; /* Lighter green for accents and buttons */
+  --sidebar-hover: #0a7048; /* Slightly darker version of secondary for hover states */
+  --sidebar-text-primary: #ffffff; /* White text */
+  --sidebar-text-secondary: #e0e0e0; /* Light gray text */
+  --sidebar-border: rgba(255, 255, 255, 0.1);
+  --shadow-small: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.2);
+  --shadow-medium: 0 0.25rem 0.5rem rgba(0, 0, 0, 0.2);
+}
+
+/* Base sidebar styles with percentage values where appropriate */
 .sidebar {
-  width: 250px;
-  min-width: 250px;
-  background-color: #2c3e50;
-  color: #ecf0f1;
+  width: 10%; /* Percentage of viewport width */
+  min-width: 15rem; /* Minimum width to ensure content is readable */
+  max-width: 20rem; /* Maximum width to prevent excessive stretching */
+  background-color: var(--sidebar-primary);
+  color: var(--sidebar-text-primary);
   display: flex;
   flex-direction: column;
   position: fixed;
@@ -12,202 +26,312 @@
   top: 0;
   bottom: 0;
   z-index: 100;
-  transition: transform 0.3s ease;
-  overflow-y: auto;
-  height: 100vh;
+  transition: all 0.3s ease;
+  height: 100%;
+  overflow: hidden; /* Prevent scrollbar during transition */
+  box-shadow: 0 0 0.625rem rgba(0, 0, 0, 0.15);
 }
-  
+
 .sidebar.closed {
-  width: 70px;
-  min-width: 70px;
+  width: 4rem;
+  min-width: 4rem;
 }
-  
+
 .sidebar-header {
-  height: 64px;
-  padding: 0 16px;
+  height: 4rem;
+  padding: 0 5%;
   display: flex;
   align-items: center;
   justify-content: space-between;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  border-bottom: 0.0625rem solid var(--sidebar-border);
 }
-  
+
 .app-logo {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 5%;
 }
-  
+
 .logo-icon {
-  width: 32px;
-  height: 32px;
+  width: 2rem;
+  height: 2rem;
   display: flex;
   align-items: center;
   justify-content: center;
+  flex-shrink: 0;
 }
-  
+
 .logo-icon svg {
   width: 100%;
   height: 100%;
-  fill: #3498db;
+  fill: var(--sidebar-secondary);
 }
-  
+
 .app-name {
-  font-size: 18px;
+  font-size: 1.125rem;
   font-weight: 600;
-  color: white;
+  color: var(--sidebar-text-primary);
+  letter-spacing: 0.03125rem;
+  white-space: nowrap;
 }
-  
+
 .toggle-button {
-  background: transparent;
+  background-color: transparent;
+  color: var(--sidebar-text-primary);
   border: none;
-  color: #ecf0f1;
-  cursor: pointer;
-  padding: 8px;
+  padding: 0.1875rem;
   display: flex;
   align-items: center;
   justify-content: center;
+  border-radius: 0.125rem;
+  cursor: pointer;
+  transition: background-color 0.2s;
+  flex-shrink: 0;
 }
-  
+
 .toggle-button:hover {
-  color: white;
+  background-color: rgba(255, 255, 255, 0.1);
 }
-  
+
 .toggle-button svg {
-  width: 20px;
-  height: 20px;
+  width: 1.25rem;
+  height: 1.25rem;
 }
-  
+
 /* Sidebar menu */
 .sidebar-menu {
   flex: 1;
-  padding: 16px 0;
+  padding: 5% 0;
+  overflow-y: auto; /* Allow scrolling on the menu itself */
+  overflow-x: hidden; /* Prevent horizontal scroll */
+  scrollbar-width: thin;
+  scrollbar-color: var(--sidebar-secondary) var(--sidebar-primary);
 }
-  
+
+.sidebar-menu::-webkit-scrollbar {
+  width: 0.375rem;
+}
+
+.sidebar-menu::-webkit-scrollbar-track {
+  background: var(--sidebar-primary);
+}
+
+.sidebar-menu::-webkit-scrollbar-thumb {
+  background-color: var(--sidebar-secondary);
+  border-radius: 0.375rem;
+}
+
 .sidebar-menu ul {
   list-style: none;
   padding: 0;
   margin: 0;
+  width: 100%;
 }
-  
+
 .sidebar-menu li {
-  margin-bottom: 2px;
+  margin-bottom: 0.125rem;
+  width: 100%;
+  display: flex;
+  justify-content: center;
 }
-  
+
 .menu-item {
   display: flex;
   align-items: center;
-  padding: 12px 16px;
-  width: 100%;
+  padding: 0.75rem 7.5%;
+  width: 85%;
   background: transparent;
   border: none;
-  color: #bdc3c7;
+  color: var(--sidebar-text-secondary);
   cursor: pointer;
   text-align: left;
   transition: all 0.2s;
-  font-size: 15px;
-  gap: 12px;
+  font-size: 0.9375rem;
+  gap: 7.5%;
+  border-radius: 0.25rem;
+  margin: 0 auto;
+  outline: none; /* Remove default focus outline */
 }
-  
+
 .menu-item:hover {
-  background-color: rgba(255, 255, 255, 0.1);
-  color: white;
+  background-color: var(--sidebar-secondary);
+  color: var(--sidebar-text-primary);
 }
-  
+
 .menu-item.active {
-  background-color: rgba(255, 255, 255, 0.08);
-  color: white;
-  border-left: 3px solid #4299e1;
+  background-color: var(--sidebar-secondary);
+  color: var(--sidebar-text-primary);
+  box-shadow: var(--shadow-small);
 }
-  
+
 .menu-icon {
-  width: 24px;
+  width: 1.5rem;
+  height: 1.5rem;
   text-align: center;
+  color: var(--sidebar-text-primary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
 }
-  
+
+/* Center icons when sidebar is closed */
+.sidebar.closed .menu-item {
+  padding: 0.75rem 0;
+  width: 3rem;
+  justify-content: center;
+}
+
 .sidebar.closed .menu-icon {
   margin-right: 0;
+  margin-left: 0;
 }
-  
+
 .menu-label {
   flex: 1;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
-  
+
 /* Sidebar footer */
 .sidebar-footer {
-  padding: 16px;
-  border-top: 1px solid rgba(255, 255, 255, 0.1);
-  font-size: 12px;
-  color: #718096;
+  padding: 5%;
+  border-top: 0.0625rem solid var(--sidebar-border);
+  color: var(--sidebar-text-secondary);
   text-align: center;
+}
+
+/* Logout button */
+.logout-button {
+  background-color: var(--sidebar-secondary);
+  color: var(--sidebar-text-primary);
+  border: none;
+  padding: 0.625rem 5%;
+  border-radius: 0.25rem;
+  cursor: pointer;
+  transition: all 0.2s;
+  width: 100%;
+  font-weight: 500;
+  letter-spacing: 0.03125rem;
+  box-shadow: var(--shadow-small);
+  outline: none; /* Remove default focus outline */
+}
+
+.logout-button:hover {
+  background-color: var(--sidebar-hover);
+  transform: translateY(-0.0625rem);
+  box-shadow: var(--shadow-medium);
+}
+
+.logout-button:active {
+  transform: translateY(0);
+  box-shadow: var(--shadow-small);
 }
 
 /* Logout button icon for closed sidebar */
 .logout-button-icon {
-  background: transparent;
+  background-color: var(--sidebar-secondary);
   border: none;
-  color: #ecf0f1;
+  color: var(--sidebar-text-primary);
   cursor: pointer;
-  padding: 8px;
+  padding: 0.625rem;
   display: flex;
   align-items: center;
   justify-content: center;
   margin: 0 auto;
-  font-size: 24px;
+  font-size: 1.375rem;
+  border-radius: 50%;
+  width: 2.5rem;
+  height: 2.5rem;
+  transition: all 0.2s;
+  box-shadow: var(--shadow-small);
+  outline: none; /* Remove default focus outline */
 }
 
 .logout-button-icon:hover {
-  color: white;
+  background-color: var(--sidebar-hover);
+  transform: translateY(-0.0625rem);
+  box-shadow: var(--shadow-medium);
+}
+
+.logout-button-icon:active {
+  transform: translateY(0);
+  box-shadow: var(--shadow-small);
 }
 
 /* Toggle button for mobile */
 .mobile-toggle-button {
   display: none;
   position: fixed;
-  top: 16px;
-  left: 16px;
+  top: 1rem;
+  left: 1rem;
   z-index: 1001;
-  background-color: #2c3e50;
-  color: white;
+  background-color: var(--sidebar-primary);
+  color: var(--sidebar-text-primary);
   border: none;
-  border-radius: 4px;
-  width: 40px;
-  height: 40px;
+  border-radius: 0.25rem;
+  width: 2.5rem;
+  height: 2.5rem;
   justify-content: center;
   align-items: center;
   cursor: pointer;
-  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+  box-shadow: var(--shadow-small);
+  transition: all 0.2s;
+  outline: none; /* Remove default focus outline */
 }
 
-/* Mobile styles for iPhone 14 Pro Max and other mobile devices */
-@media screen and (max-width: 844px) {
-  /* Show mobile toggle button */
+.mobile-toggle-button:hover {
+  background-color: var(--sidebar-secondary);
+  box-shadow: var(--shadow-medium);
+}
+
+/* Overlay for mobile view */
+.sidebar-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.5);
+  z-index: 99;
+  display: none;
+}
+
+/* Responsive styles */
+@media screen and (max-width: 64rem) { /* ~1024px */
+  .sidebar {
+    width: 25%;
+    min-width: 14rem;
+  }
+}
+
+@media screen and (max-width: 48rem) { /* ~768px */
+  /* Mobile hamburger toggle */
   .mobile-toggle-button {
     display: flex;
   }
 
   /* Default state - sidebar is off screen */
   .sidebar {
-    width: 250px;
-    min-width: 250px;
+    width: 80%;
+    max-width: 20rem;
     transform: translateX(-100%);
-    flex-direction: column;
     top: 0;
     height: 100%;
-    overflow-y: auto;
-    position: fixed;
     z-index: 1000;
   }
   
-  /* When sidebar is open via .open class */
+  /* When sidebar is open */
   .sidebar.open {
     transform: translateX(0);
   }
   
-  /* Fix for closed sidebar on mobile - don't hide completely */
+  /* Closed sidebar on mobile */
   .sidebar.closed {
-    width: 70px;
-    min-width: 70px;
-    transform: translateX(-70px); /* Only move it off-screen by its own width */
+    width: 4rem;
+    min-width: 4rem;
+    transform: translateX(-4rem);
   }
   
   /* When closed sidebar is also open */
@@ -215,75 +339,43 @@
     transform: translateX(0);
   }
   
-  /* Keep sidebar-header visible with consistent height */
-  .sidebar-header {
-    height: 60px;
-    padding: 0 16px;
+  /* Show overlay when sidebar is open */
+  .sidebar.open + .sidebar-overlay {
+    display: block;
   }
   
-  /* Adjust menu items for better touch targets */
+  /* Larger touch targets for mobile */
   .menu-item {
-    padding: 16px;
-    font-size: 16px;
+    padding: 0.875rem 7.5%;
+    min-height: 3rem;
   }
   
   .menu-icon {
-    width: 24px;
-    height: 24px;
+    width: 1.625rem;
+    height: 1.625rem;
   }
   
-  /* Make logout button more prominent in footer */
-  .sidebar-footer {
-    padding: 20px 16px;
-    font-size: 14px;
+  /* Keep icons centered on mobile in closed mode */
+  .sidebar.closed .menu-item {
+    padding: 0.875rem 0;
+    width: 3rem;
+    justify-content: center;
   }
 }
 
-/* iPhone 14 Pro Max specific adjustments */
-@media screen and (max-width: 430px) {
+/* Small screens and phones */
+@media screen and (max-width: 30rem) { /* ~480px */
   .sidebar {
-    width: 280px; /* Slightly wider for better reading */
+    width: 85%;
   }
   
-  .sidebar.closed {
-    width: 70px;
-  }
-  
-  /* Adjust for iPhone home indicator at bottom */
-  .sidebar-footer {
-    padding-bottom: calc(20px + env(safe-area-inset-bottom));
-  }
-  
-  /* Larger touch targets */
-  .menu-item {
-    padding: 16px;
-    min-height: 56px;
-  }
-  
-  .menu-icon {
-    width: 26px;
-    height: 26px;
-  }
-  
-  /* Handle notch area */
+  /* Safe area insets for notched phones */
   .sidebar-header {
-    padding-top: env(safe-area-inset-top);
-    height: calc(60px + env(safe-area-inset-top));
+    padding-top: calc(0.5rem + env(safe-area-inset-top, 0));
+    height: calc(4rem + env(safe-area-inset-top, 0));
   }
   
-  /* Make overlay dismiss on tap */
-  .sidebar-overlay {
-    position: fixed;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background-color: rgba(0, 0, 0, 0.5);
-    z-index: 999;
-    display: none;
-  }
-  
-  .sidebar.open + .sidebar-overlay {
-    display: block;
+  .sidebar-footer {
+    padding-bottom: calc(1rem + env(safe-area-inset-bottom, 0));
   }
 }
