@@ -11,7 +11,7 @@ const UsersList = ({ userRole }) => {
   const [editUserId, setEditUserId] = useState(null);
   const [formData, setFormData] = useState({
     email: '',
-    password: '',
+    // password: '',
     role: 'user',
     name: '',
     mobile: '',
@@ -33,7 +33,7 @@ const UsersList = ({ userRole }) => {
   const resetFormState = () => {
     setFormData({ 
       email: '', 
-      password: '', 
+    //   password: '', 
       role: 'user', 
       name: '', 
       mobile: '',
@@ -131,7 +131,7 @@ const UsersList = ({ userRole }) => {
       // Create FormData object for sending to backend
       const formDataToSend = new FormData();
       formDataToSend.append('email', formData.email);
-      formDataToSend.append('password', formData.password);
+    //   formDataToSend.append('password', formData.password);
       formDataToSend.append('role', 'user'); // Always add regular users from this component
       formDataToSend.append('name', formData.name);
       formDataToSend.append('mobile', formData.mobile);
@@ -167,7 +167,7 @@ const UsersList = ({ userRole }) => {
   const handleEditClick = (user) => {
     setFormData({
       email: user.email,
-      password: '', // Password is not shown in edit mode
+    //   password: '', // Password is not shown in edit mode
       role: user.role,
       name: user.name || '',
       mobile: user.mobile || '',

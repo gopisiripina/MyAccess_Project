@@ -77,7 +77,7 @@ const UserModal = ({
             />
           </div>
 
-          {!isEditMode && (
+          {/* {!isEditMode && (
             <div className="form-group">
               <label htmlFor="password">Password</label>
               <input
@@ -89,7 +89,7 @@ const UserModal = ({
                 required
               />
             </div>
-          )}
+          )} */}
 
           <div className="form-group">
             <label htmlFor="name">Name</label>
@@ -186,7 +186,7 @@ UserModal.propTypes = {
   isEditMode: PropTypes.bool.isRequired,
   formData: PropTypes.shape({
     email: PropTypes.string.isRequired,
-    password: PropTypes.string,
+    // password: PropTypes.string,
     role: PropTypes.string.isRequired,
     name: PropTypes.string,
     mobile: PropTypes.string,

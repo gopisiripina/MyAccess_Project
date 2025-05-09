@@ -9,7 +9,7 @@ const AdminsList = () => {
   const [editUserId, setEditUserId] = useState(null);
   const [formData, setFormData] = useState({
     email: '',
-    password: '',
+    // password: '',
     role: 'admin',
     name: '',
     mobile: '',
@@ -30,7 +30,7 @@ const AdminsList = () => {
   const resetFormState = () => {
     setFormData({ 
       email: '', 
-      password: '', 
+    //   password: '', 
       role: 'admin', 
       name: '', 
       mobile: '',
@@ -138,7 +138,7 @@ const AdminsList = () => {
       // Create FormData object for sending to backend
       const formDataToSend = new FormData();
       formDataToSend.append('email', formData.email);
-      formDataToSend.append('password', formData.password);
+    //   formDataToSend.append('password', formData.password);
       formDataToSend.append('role', 'admin'); // Always set role to admin in this component
       formDataToSend.append('name', formData.name);
       formDataToSend.append('mobile', formData.mobile);
@@ -173,7 +173,7 @@ const AdminsList = () => {
   const handleEditClick = (admin) => {
     setFormData({
       email: admin.email,
-      password: '', // Password is not shown in edit mode
+    //   password: '', // Password is not shown in edit mode
       role: admin.role,
       name: admin.name || '',
       mobile: admin.mobile || '',
@@ -420,19 +420,7 @@ const AdminsList = () => {
               />
             </div>
 
-            {!isEditMode && (
-              <div className="form-group">
-                <label htmlFor="password">Password</label>
-                <input
-                  type="password"
-                  id="password"
-                  name="password"
-                  value={formData.password}
-                  onChange={handleInputChange}
-                  required
-                />
-              </div>
-            )}
+            
 
             <div className="form-group">
               <label htmlFor="name">Name</label>

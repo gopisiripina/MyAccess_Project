@@ -120,7 +120,7 @@ exports.addUser = async (req, res) => {
   const creatorRole = req.headers.role;
   const creatorId = req.headers.userid;
 
-  if (!email || !password || !role || !name || !mobile) {
+  if (!email || !role || !name || !mobile) {
     return res.status(400).json({ message: 'Missing required fields' });
   }
 
