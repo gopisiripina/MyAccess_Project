@@ -1,9 +1,3 @@
-// This code updates the Dashboard.jsx component to:
-// 1. Remove the redundant loading spinner at the top of the form
-// 2. Improve the loading effect when fetching users
-// 3. Fix action button alignment
-// 4. Fix content positioning when sidebar is closed
-
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
