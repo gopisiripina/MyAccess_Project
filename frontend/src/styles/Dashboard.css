@@ -500,7 +500,7 @@ input:checked + .slider:before {
 .user-name-cell {
   display: flex;
   align-items: center;
-  padding: 0.75rem 1rem;
+  padding: 0.75rem 0rem;
   min-width: 9.375rem;
 }
 
@@ -598,6 +598,21 @@ input:checked + .slider:before {
 
 /* ============= MODAL STYLING ============= */
 .modal-overlay {
+::-webkit-scrollbar {
+    width: 8px;
+    background: transparent;
+}
+
+/* Track (scrollbar background) */
+::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+/* Thumb (scroll handle) */
+::-webkit-scrollbar-thumb {
+    background-color: #6b6e6c;
+    border-radius: 4px;
+}
   position: fixed;
   top: 0;
   left: 0;
@@ -615,22 +630,25 @@ input:checked + .slider:before {
   border-radius: 0.5rem;
   width: 90%;
   max-width: 31.25rem;
+  max-height: 95vh; /* Limit modal height to 85% of viewport height */
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-  overflow: hidden;
+  overflow: auto; /* Add scrolling when content exceeds height */
 }
 
 .modal-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 1rem 1.5rem;
+  padding: 0.75rem 1.25rem; /* Reduced padding */
   border-bottom: 1px solid #e1e5eb;
 }
 
 .modal-header h3 {
   margin: 0;
   color: #2d3748;
+  font-size: 1rem; /* Smaller font size */
 }
+
 
 .close-button {
   background: none;
@@ -645,17 +663,17 @@ input:checked + .slider:before {
 }
 
 .modal form {
-  padding: 1.5rem;
+  padding: 0.75rem 1.25rem 1rem;
 }
 
 .form-group {
-  margin-bottom: 1rem;
+  margin-bottom: 0.75rem;
 }
 
 .form-group label {
   display: block;
-  margin-bottom: 0.5rem;
-  font-weight: 500;
+  margin-bottom: 0.25rem;
+  font-size: 0.875rem; /* Smaller font */
   color: #4a5568;
 }
 
@@ -954,5 +972,3 @@ input:checked + .slider:before {
     font-size: 0.9375rem;
   }
 }
-
-
