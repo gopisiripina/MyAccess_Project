@@ -41,6 +41,26 @@ const ProjectsList = ({ userRole }) => {
     navigate(`/project/${projectId}`);
   };
 
+  // Generate loading rows to match the user table loading effect
+  const renderLoadingRows = () => {
+    return Array(5).fill(0).map((_, index) => (
+      <tr key={`loading-${index}`} className="loading-row-placeholder">
+        <td>
+          <div className="loading-cell-content" style={{ width: '70%' }}></div>
+        </td>
+        <td>
+          <div className="loading-cell-content" style={{ width: '85%' }}></div>
+        </td>
+        <td>
+          <div className="loading-cell-content" style={{ width: '60%' }}></div>
+        </td>
+        <td>
+          <div className="loading-cell-content" style={{ width: '50%' }}></div>
+        </td>
+      </tr>
+    ));
+  };
+
   return (
     <div className="users-list-container">
       <div className="users-header">
@@ -56,46 +76,61 @@ const ProjectsList = ({ userRole }) => {
       </div>
       
       {loading ? (
-        <p>Loading...</p>
+        <div className="table-container">
+          <table className="users-table">
+            <thead>
+              <tr>
+                <th>Name</th>
+                <th>Description</th>
+                <th>Created At</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {renderLoadingRows()}
+            </tbody>
+          </table>
+        </div>
       ) : error ? (
         <p className="error-message">{error}</p>
       ) : (
-        <table className="users-table">
-          <thead>
-            <tr>
-              <th>Name</th>
-              <th>Description</th>
-              <th>Created At</th>
-              <th>Actions</th>
-            </tr>
-          </thead>
-          <tbody>
-            {projects.length > 0 ? (
-              projects.map(project => (
-                <tr key={project.id}>
-                  <td>{project.name}</td>
-                  <td>{project.description || '-'}</td>
-                  <td>{new Date(project.createdAt).toLocaleDateString()}</td>
-                  <td>
-                    <button 
-                      className="edit-button"
-                      onClick={() => handleViewProject(project.id)}
-                    >
-                      View
-                    </button>
-                  </td>
-                </tr>
-              ))
-            ) : (
+        <div className="table-container">
+          <table className="users-table">
+            <thead>
               <tr>
-                <td colSpan="4">No projects found</td>
+                <th>Name</th>
+                <th>Description</th>
+                <th>Created At</th>
+                <th>Actions</th>
               </tr>
-            )}
-          </tbody>
-        </table>
+            </thead>
+            <tbody>
+              {projects.length > 0 ? (
+                projects.map(project => (
+                  <tr key={project.id}>
+                    <td>{project.name}</td>
+                    <td>{project.description || '-'}</td>
+                    <td>{new Date(project.createdAt).toLocaleDateString()}</td>
+                    <td>
+                      <button 
+                        className="edit-button"
+                        onClick={() => handleViewProject(project.id)}
+                      >
+                        View
+                      </button>
+                    </td>
+                  </tr>
+                ))
+              ) : (
+                <tr>
+                  <td colSpan="4" className="no-results">No projects found</td>
+                </tr>
+              )}
+            </tbody>
+          </table>
+        </div>
       )}
     </div>
   );
 };
-
 export default ProjectsList;
