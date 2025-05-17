@@ -10,7 +10,7 @@ exports.checkAuth = async (req, res, next) => {
   }
 
   try {
-    // Verify that the user exists and has the claimed role
+    
     const userDoc = await db.collection('users').doc(userId).get();
     
     if (!userDoc.exists) {
@@ -24,7 +24,7 @@ exports.checkAuth = async (req, res, next) => {
     }
     
     // Authentication passed
-    next();
+    next(); 
   } catch (error) {
     console.error('Auth middleware error:', error);
     return res.status(500).json({ message: 'Server error' });
