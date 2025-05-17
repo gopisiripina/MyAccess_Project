@@ -1,4 +1,3 @@
-// Dashboard.jsx - Main component that handles layout and routing
 import React, { useState, useEffect } from 'react';
 import { Routes, Route, Navigate, useSearchParams, useNavigate } from 'react-router-dom';
 import Sidebar from './Sidebar';
