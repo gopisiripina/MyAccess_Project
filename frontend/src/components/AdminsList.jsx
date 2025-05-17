@@ -496,7 +496,7 @@ const AdminsList = () => {
   return (
     <div className="users-list-container">
       <div className="users-header">
-        <h2>Administrators</h2>
+        <h2>Admins</h2>
         <button 
           className="add-button"
           onClick={() => {

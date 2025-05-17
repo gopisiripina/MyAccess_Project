@@ -97,12 +97,56 @@
 }
 
 /* Dashboard welcome section */
+
+.dashboard-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 1rem;
+}
+
+.dashboard-avatar,
+.avatar-placeholder {
+  width: 50px;
+  height: 50px;
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+.dashboard-avatar {
+  border: 2px solid #ccc;
+}
+
+.avatar-placeholder {
+  background-color: #4A5568; /* dark gray */
+  color: white;
+  font-weight: bold;
+  font-size: 1.2rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-transform: uppercase;
+}
 .dashboard-welcome {
+  width: calc(100vw - 50px);;
+  max-width: 100%;
   background-color: white;
   border-radius: 0.5rem;
   padding: 1.5rem;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  min-height: 20px;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+  transition: all 0.3s ease; /* Match the transition of the main content */
+  margin-bottom: 20px; /* Add some spacing if there's content below */
+  height: calc(100vh - 120px); /* Take almost full height of content area, adjust as needed */
 }
+
+
+
+/* Add to your existing Dashboard.css file */
 
 .dashboard-welcome h2 {
   color: #2d3748;
@@ -500,7 +544,7 @@ input:checked + .slider:before {
 .user-name-cell {
   display: flex;
   align-items: center;
-  padding: 0.75rem 1rem;
+  padding: 0.75rem 0rem;
   min-width: 9.375rem;
 }
 
@@ -598,6 +642,21 @@ input:checked + .slider:before {
 
 /* ============= MODAL STYLING ============= */
 .modal-overlay {
+::-webkit-scrollbar {
+    width: 8px;
+    background: transparent;
+}
+
+/* Track (scrollbar background) */
+::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+/* Thumb (scroll handle) */
+::-webkit-scrollbar-thumb {
+    background-color: #6b6e6c;
+    border-radius: 4px;
+}
   position: fixed;
   top: 0;
   left: 0;
@@ -615,22 +674,25 @@ input:checked + .slider:before {
   border-radius: 0.5rem;
   width: 90%;
   max-width: 31.25rem;
+  max-height: 95vh; /* Limit modal height to 85% of viewport height */
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-  overflow: hidden;
+  overflow: auto; /* Add scrolling when content exceeds height */
 }
 
 .modal-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 1rem 1.5rem;
+  padding: 0.75rem 1.25rem; /* Reduced padding */
   border-bottom: 1px solid #e1e5eb;
 }
 
 .modal-header h3 {
   margin: 0;
   color: #2d3748;
+  font-size: 1rem; /* Smaller font size */
 }
+
 
 .close-button {
   background: none;
@@ -645,17 +707,17 @@ input:checked + .slider:before {
 }
 
 .modal form {
-  padding: 1.5rem;
+  padding: 0.75rem 1.25rem 1rem;
 }
 
 .form-group {
-  margin-bottom: 1rem;
+  margin-bottom: 0.75rem;
 }
 
 .form-group label {
   display: block;
-  margin-bottom: 0.5rem;
-  font-weight: 500;
+  margin-bottom: 0.25rem;
+  font-size: 0.875rem; /* Smaller font */
   color: #4a5568;
 }
 
@@ -710,6 +772,12 @@ input:checked + .slider:before {
 
 /* Small tablets and large phones */
 @media screen and (max-width: 52.75rem) { /* 844px */
+
+  .dashboard-welcome {
+    height: calc(100vh - 140px); /* Adjust for mobile */
+    padding: 1.25rem;
+  }
+
   /* Reset layout for mobile */
   .sidebar {
     width: 100%;
@@ -849,6 +917,12 @@ input:checked + .slider:before {
 
 /* iPhone and small phones */
 @media screen and (max-width: 26.875rem) { /* 430px */
+
+  .dashboard-welcome {
+    height: calc(100vh - 160px); /* Further adjust for small phones */
+    padding: 1.125rem;
+  }
+
   /* Enhanced padding for iPhone */
   .main-content {
     padding-bottom: calc(4.6875rem + env(safe-area-inset-bottom));
@@ -954,5 +1028,3 @@ input:checked + .slider:before {
     font-size: 0.9375rem;
   }
 }
-
-
