@@ -7,7 +7,8 @@ import Forgot from './components/Forgot';
 import ResetPassword from './components/ResetPassword';
 import ProjectDashboard from './components/ProjectDashboard';
 import AddProject from './components/AddProject';
-
+import GuestLoginPage from "./components/GuestLoginPage"
+import GuestProjectDashboard from './components/GuestProjectCard';
 
 // Protected route component that checks if user is authenticated
 const ProtectedRoute = ({ element }) => {
@@ -52,6 +53,18 @@ function App() {
           
           {/* Fallback */}
           <Route path="*" element={<Navigate to="/" replace />} />
+          // Add this new route to your existing routes
+          <Route path="/guest-login" element={<GuestLoginPage />} />
+          {/* <Route path="/guest-view" element={<GuestProjectCard />} /> */}
+          // Add this new route to your existing routes
+<Route 
+  path="/project/:projectId" 
+  element={
+    localStorage.getItem('userRole') === 'guest' 
+      ? <GuestProjectDashboard /> 
+      : <ProtectedRoute element={<ProjectDashboard />} />
+  }
+/>
         </Routes>
       </Router>
     );

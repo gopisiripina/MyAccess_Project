@@ -44,7 +44,26 @@ const ProjectDashboard = () => {
 
     fetchProjectData();
   }, [projectId, navigate]);
+// Add to ProjectDashboard.js
+const [realTimeStatus, setRealTimeStatus] = useState(null);
 
+useEffect(() => {
+  const ws = new WebSocket(`ws://localhost:5000/ws/projects/${projectId}/status`);
+  
+  ws.onmessage = (event) => {
+    const data = JSON.parse(event.data);
+    setRealTimeStatus(data);
+  };
+
+  return () => ws.close();
+}, [projectId]);
+
+// Display component
+{realTimeStatus && (
+  <div className={`status-bar ${realTimeStatus.status}`}>
+    {realTimeStatus.message}
+  </div>
+)}
   const getProjectIcon = () => {
     if (projectData?.name?.includes('Smart Home')) return <FiHome className="project-icon" />;
     if (projectData?.name?.includes('Industrial')) return <FiSettings className="project-icon" />;
