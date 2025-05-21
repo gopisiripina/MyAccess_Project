@@ -51,8 +51,9 @@ const Sidebar = ({ userRole, activeTab, onTabChange, onLogout, onSidebarToggle }
     const menuItems = [
       { id: 'dashboard', label: 'Dashboard', icon: <AiOutlineDashboard style={{ fontSize: '20px' }}/>, visible: true },
       { id: 'admins', label: 'Admins', icon: <FaCrown style={{ fontSize: '20px' }}/>, visible: userRole === 'superadmin' },
+      // Modified line: guest role should not see Users tab
       { id: 'users', label: 'Users', icon: <HiUsers style={{ fontSize: '20px' }}/>, visible: userRole === 'superadmin' || userRole === 'admin' },
-      { id: 'devices', label: 'Devices', icon: <FaMicrochip style={{ fontSize: '20px' }}/>, visible: true } // Visible to all roles
+      { id: 'devices', label: 'Devices', icon: <FaMicrochip style={{ fontSize: '20px' }}/>, visible: true } // Visible to all roles including guest
     ];
       
     return menuItems.filter(item => item.visible);

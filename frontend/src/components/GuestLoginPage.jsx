@@ -23,11 +23,12 @@ const GuestLoginPage = () => {
       });
 
       if (res.data) {
+        // Store the email explicitly in localStorage along with the other data
         localStorage.setItem('userId', res.data.userId);
-        localStorage.setItem('userEmail', res.data.email);
+        localStorage.setItem('userEmail', values.email); // Store the email from the form
         localStorage.setItem('userRole', 'guest');
         message.success('Guest login successful!');
-        navigate('/dashboard?tab=devices');
+        navigate('/dashboard?tab=dashboard');
       }
     } catch (err) {
       console.error('Guest login failed:', err);

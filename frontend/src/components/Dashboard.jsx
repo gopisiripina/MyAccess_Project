@@ -30,8 +30,10 @@ const Dashboard = () => {
     }
     setUserRole(role);
 
+    // Updated logic to include guest role restrictions
     if ((role === 'admin' && activeTab === 'admins') || 
-        (role === 'user' && (activeTab === 'admins' || activeTab === 'users'))) {
+        (role === 'user' && (activeTab === 'admins' || activeTab === 'users')) ||
+        (role === 'guest' && (activeTab === 'admins' || activeTab === 'users'))) {
       setActiveTab('dashboard');
       navigate('/dashboard?tab=dashboard');
     }
