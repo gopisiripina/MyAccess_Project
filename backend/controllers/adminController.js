@@ -3,6 +3,8 @@ const { db } = require('../firebase');
 const admin = require('firebase-admin');
 const { processQueue } = require('../services/queueService');
 const config = require('../config');
+const { resetGuestSessionCounter, resetAllGuestSessionCounters } = require('../services/sessionReset');
+
 
 // Get all active guest sessions
 exports.getActiveSessions = async (req, res) => {
@@ -293,6 +295,52 @@ exports.endGuestSession = async (req, res) => {
     });
   } catch (error) {
     console.error('Error terminating session:', error);
+    res.status(500).json({ message: 'Server error' });
+  }
+};
+// Reset a specific guest's session counter
+exports.resetGuestCounter = async (req, res) => {
+  const { userId } = req.params;
+  const userRole = req.headers.role;
+  
+  // Only admin and superadmin can reset counters
+  if (userRole !== 'admin' && userRole !== 'superadmin') {
+    return res.status(403).json({ message: 'Access denied' });
+  }
+  
+  try {
+    const success = await resetGuestSessionCounter(userId);
+    
+    if (success) {
+      res.status(200).json({ message: 'Guest session counter reset successfully' });
+    } else {
+      res.status(400).json({ message: 'Failed to reset guest session counter' });
+    }
+  } catch (error) {
+    console.error('Error resetting guest counter:', error);
+    res.status(500).json({ message: 'Server error' });
+  }
+};
+
+// Reset all guests' session counters
+exports.resetAllGuestCounters = async (req, res) => {
+  const userRole = req.headers.role;
+  
+  // Only superadmin can reset all counters
+  if (userRole !== 'superadmin') {
+    return res.status(403).json({ message: 'Access denied' });
+  }
+  
+  try {
+    const success = await resetAllGuestSessionCounters();
+    
+    if (success) {
+      res.status(200).json({ message: 'All guest session counters reset successfully' });
+    } else {
+      res.status(400).json({ message: 'Failed to reset guest session counters' });
+    }
+  } catch (error) {
+    console.error('Error resetting all guest counters:', error);
     res.status(500).json({ message: 'Server error' });
   }
 };

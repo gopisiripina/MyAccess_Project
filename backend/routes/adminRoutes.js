@@ -8,7 +8,9 @@ const {
   approveExtension,
   rejectExtension,
   getUsageLogs,
-  endGuestSession
+  endGuestSession,
+  resetGuestCounter,
+  resetAllGuestCounters
 } = require('../controllers/adminController');
 const { verifyUser, checkRole } = require('../middleware/authMiddleware');
 
@@ -25,5 +27,19 @@ router.post('/guest-sessions/:sessionId/terminate', checkRole(['admin', 'superad
 
 // Superadmin-only routes
 router.get('/usage-logs', checkRole(['superadmin']), getUsageLogs);
+// Add these routes to your adminRoutes.js file
 
+// Reset a specific guest's session counter
+// router.post('/reset-guest-counter/:userId', checkRole(['admin', 'superadmin']), resetGuestCounter);
+router.post('/reset-guest-counter/:userId', 
+  (req, res, next) => {
+    console.log('DEBUG: Reached reset-guest-counter route');
+    next();
+  },
+  checkRole(['admin', 'superadmin']), 
+  resetGuestCounter
+);
+
+// Reset all guests' session counters (superadmin only)
+router.post('/reset-all-guest-counters', checkRole(['superadmin']), resetAllGuestCounters);
 module.exports = router;

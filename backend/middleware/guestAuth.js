@@ -1,7 +1,6 @@
-//middleware/guestAuth.js
 const { db } = require('../firebase');
 const rateLimit = require('express-rate-limit');
-const config = require('../config'); // Add this import
+const config = require('../config');
 
 const guestRateLimiter = rateLimit({
   windowMs: config.guest.rateLimit.windowMs,
@@ -24,9 +23,9 @@ exports.guestAuth = async (req, res, next) => {
     }
     
     const userData = userDoc.data();
-    if (userData.activeSessions >= config.guest.maxActiveSessions) {
-      return res.status(403).json({ message: 'Maximum active sessions reached' });
-    }
+    
+    // REMOVED the active sessions check that was causing your error
+    // Guests can now access any number of projects, following queue order
     
     req.guest = {
       id: userId,
