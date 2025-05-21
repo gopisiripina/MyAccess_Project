@@ -41,6 +41,7 @@ const sortQueueByPriority = (queue) => {
 };
 
 // Process next user in queue
+// Fix for the processQueue function in queueService.js
 exports.processQueue = async (projectId) => {
   try {
     const queueRef = db.collection('queues').doc(projectId);
@@ -72,15 +73,29 @@ exports.processQueue = async (projectId) => {
       
       // Create session for next user
       const sessionId = require('uuid').v4();
-      const sessionDuration = nextUser.role === 'guest' 
-        ? config.guest.sessionDuration 
-        : config.regular.sessionDuration || 300000; // 5 minutes default for regular users
+      
+      // THIS IS THE KEY FIX: Always check role explicitly rather than relying on role property
+      // which might not always be present in older queue entries
+      let sessionDuration;
+      
+      if (nextUser.role === 'guest') {
+        sessionDuration = config.guest.sessionDuration; // 60000 milliseconds (60 seconds)
+      } else if (nextUser.role === 'admin' || nextUser.role === 'superadmin' || nextUser.role === 'user') {
+        sessionDuration = config.regular.sessionDuration; // 300000 milliseconds (5 minutes)
+      } else {
+        // For safety, if role is undefined or doesn't match known roles,
+        // check userId pattern as fallback
+        sessionDuration = nextUser.userId.startsWith('guest_') ? 
+          config.guest.sessionDuration : 
+          config.regular.sessionDuration;
+      }
       
       const timerEnds = new Date(Date.now() + sessionDuration);
       
       await db.collection('guestSessions').doc(sessionId).set({
         userId: nextUser.userId,
         email: nextUser.email,
+        role: nextUser.role, // Make sure to store the role
         projectId,
         status: 'active',
         startTime: admin.firestore.FieldValue.serverTimestamp(),
@@ -102,7 +117,9 @@ exports.processQueue = async (projectId) => {
       return {
         userId: nextUser.userId,
         email: nextUser.email,
-        sessionId
+        sessionId,
+        role: nextUser.role,
+        timerEnds: timerEnds.toISOString()
       };
     }
     

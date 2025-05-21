@@ -1,3 +1,4 @@
+//controllers/guestController.js
 const { db, rtdb } = require('../firebase');
 const { v4: uuidv4 } = require('uuid');
 const admin = require('firebase-admin');
@@ -46,6 +47,7 @@ exports.guestLogin = async (req, res) => {
   }
 };
 
+// Fix for the requestProjectAccess function in guestController.js
 exports.requestProjectAccess = async (req, res) => {
   const { projectId } = req.params;
   const userId = req.headers.userid;
@@ -92,13 +94,16 @@ exports.requestProjectAccess = async (req, res) => {
         lastAccessed: admin.firestore.FieldValue.serverTimestamp()
       }, { merge: true });
 
-      // Create session
+      // Create session - ENSURE we use guest session duration
       const sessionId = uuidv4();
+      
+      // ALWAYS use guest session duration for this controller
       const timerEnds = new Date(Date.now() + config.guest.sessionDuration);
       
       await db.collection('guestSessions').doc(sessionId).set({
         userId,
         email,
+        role: 'guest', // Explicitly set the role
         projectId,
         status: 'active',
         startTime: admin.firestore.FieldValue.serverTimestamp(),
@@ -140,6 +145,7 @@ exports.requestProjectAccess = async (req, res) => {
         queue: [...currentQueue, {
           userId,
           email,
+          role: 'guest', // Always set the role explicitly
           joinedAt: nowTimestamp, // Use a regular Date object instead of serverTimestamp
           priority: config.guest.priority,
           requestedExtension: false
@@ -158,7 +164,6 @@ exports.requestProjectAccess = async (req, res) => {
     res.status(500).json({ message: 'Server error during access request' });
   }
 };
-
 exports.endSession = async (req, res) => {
   const { sessionId } = req.params;
   const userId = req.headers.userid;

@@ -1,3 +1,4 @@
+//controllers/projectController.js
 const { rtdb, db } = require('../firebase'); // Import both
 const admin = require('firebase-admin'); // Add this import
 const { v4: uuidv4 } = require('uuid');
@@ -413,6 +414,7 @@ exports.handleGuestAccess = async (req, res) => {
     res.status(500).json({ message: 'Server error' });
   }
 };
+// Fix for the requestProjectAccess function in projectController.js
 exports.requestProjectAccess = async (req, res) => {
   const { projectId } = req.params;
   const userId = req.headers.userid;
@@ -462,10 +464,18 @@ exports.requestProjectAccess = async (req, res) => {
 
       // Create session with appropriate duration based on role
       const sessionId = uuidv4();
-      const sessionDuration = role === 'guest' 
-          ? config.guest.sessionDuration 
-          : config.regular.sessionDuration || 300000; // 5 minutes default for regular users
-          
+      
+      // THIS IS THE KEY FIX: Ensure we're using the correct session duration for each role
+      let sessionDuration;
+      if (role === 'guest') {
+        sessionDuration = config.guest.sessionDuration; // 60000 milliseconds (60 seconds)
+      } else if (role === 'admin' || role === 'superadmin' || role === 'user') {
+        sessionDuration = config.regular.sessionDuration; // 300000 milliseconds (5 minutes)
+      } else {
+        // Default fallback
+        sessionDuration = config.guest.sessionDuration;
+      }
+      
       const timerEnds = new Date(Date.now() + sessionDuration);
       
       await db.collection('guestSessions').doc(sessionId).set({
@@ -543,7 +553,7 @@ exports.requestProjectAccess = async (req, res) => {
         accessGranted: false,
         message: 'Added to queue',
         position: currentQueue.length + 1,
-        estimatedWait: currentQueue.length * config.guest.sessionDuration
+        estimatedWait: currentQueue.length * (role === 'guest' ? config.guest.sessionDuration : config.regular.sessionDuration)
       });
     }
   } catch (error) {

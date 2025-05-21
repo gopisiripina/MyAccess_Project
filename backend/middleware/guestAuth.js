@@ -1,3 +1,4 @@
+//middleware/guestAuth.js
 const { db } = require('../firebase');
 const rateLimit = require('express-rate-limit');
 const config = require('../config'); // Add this import
