@@ -1,0 +1,86 @@
+.guest-project-card {
+  margin-bottom: 20px;
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+}
+
+.project-name {
+  margin: 0;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.card-content {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.status-alert {
+  margin-bottom: 16px;
+}
+
+.queue-progress-container {
+  height: 20px;
+  background: #f0f0f0;
+  border-radius: 10px;
+  margin: 16px 0;
+  position: relative;
+  overflow: hidden;
+}
+
+.queue-progress-indicator {
+  height: 100%;
+  background: #1890ff;
+  border-radius: 10px;
+  position: relative;
+  transition: width 0.3s ease;
+}
+
+.queue-position-label {
+  position: absolute;
+  right: 0;
+  top: -20px;
+  transform: translateX(50%);
+  background: #1890ff;
+  color: white;
+  padding: 2px 8px;
+  border-radius: 4px;
+  font-size: 12px;
+  white-space: nowrap;
+}
+
+.queue-details {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.queue-tag {
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.active-session, .queue-status, .access-controls {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+/* Priority tags */
+.ant-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
