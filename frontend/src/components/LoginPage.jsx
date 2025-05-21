@@ -142,6 +142,9 @@ const LoginPage = () => {
                 </Button>
               </Form.Item>
             </Form>
+            <div className="guest-login-footer">
+  <Text>Need temporary access? <a onClick={() => navigate('/guest-login')}>Guest login</a></Text>
+</div>
           </div>
         </div>
 
