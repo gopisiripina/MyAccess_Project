@@ -7,6 +7,7 @@ import { FaCrown } from "react-icons/fa6";
 import { HiUsers } from "react-icons/hi";
 import { FaBars, FaChevronLeft, FaChevronRight } from "react-icons/fa";
 import { FaMicrochip } from "react-icons/fa";
+import { FiUsers } from "react-icons/fi";
 
 const Sidebar = ({ userRole, activeTab, onTabChange, onLogout, onSidebarToggle }) => {
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
@@ -49,11 +50,36 @@ const Sidebar = ({ userRole, activeTab, onTabChange, onLogout, onSidebarToggle }
 
   const getMenuItems = () => {
     const menuItems = [
-      { id: 'dashboard', label: 'Dashboard', icon: <AiOutlineDashboard style={{ fontSize: '20px' }}/>, visible: true },
-      { id: 'admins', label: 'Admins', icon: <FaCrown style={{ fontSize: '20px' }}/>, visible: userRole === 'superadmin' },
-      // Modified line: guest role should not see Users tab
-      { id: 'users', label: 'Users', icon: <HiUsers style={{ fontSize: '20px' }}/>, visible: userRole === 'superadmin' || userRole === 'admin' },
-      { id: 'devices', label: 'Devices', icon: <FaMicrochip style={{ fontSize: '20px' }}/>, visible: true } // Visible to all roles including guest
+      { 
+        id: 'dashboard', 
+        label: 'Dashboard', 
+        icon: <AiOutlineDashboard style={{ fontSize: '20px' }}/>, 
+        visible: true 
+      },
+      { 
+        id: 'admins', 
+        label: 'Admins', 
+        icon: <FaCrown style={{ fontSize: '20px' }}/>, 
+        visible: userRole === 'superadmin' 
+      },
+      { 
+        id: 'users', 
+        label: 'Users', 
+        icon: <HiUsers style={{ fontSize: '20px' }}/>, 
+        visible: userRole === 'superadmin' || userRole === 'admin' 
+      },
+      { 
+        id: 'devices', 
+        label: 'Devices', 
+        icon: <FaMicrochip style={{ fontSize: '20px' }}/>, 
+        visible: true 
+      },
+      { 
+        id: 'guests', 
+        label: 'Guests', 
+        icon: <FiUsers style={{ fontSize: '20px' }}/>, 
+        visible: userRole === 'superadmin' || userRole === 'admin' 
+      }
     ];
       
     return menuItems.filter(item => item.visible);

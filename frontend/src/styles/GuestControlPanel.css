@@ -1,0 +1,435 @@
+.guest-control-panel {
+  padding: 24px;
+  background: #f5f5f5;
+  min-height: calc(100vh - 64px);
+}
+
+.panel-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 24px;
+  background: white;
+  padding: 20px;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.panel-header h2 {
+  margin: 0;
+  color: #1890ff;
+}
+
+/* Statistics Cards */
+.ant-statistic {
+  text-align: center;
+}
+
+.ant-statistic-title {
+  color: #666;
+  font-size: 14px;
+}
+
+.ant-statistic-content {
+  font-size: 24px;
+  font-weight: bold;
+}
+
+/* Table Styles */
+.ant-table-thead > tr > th {
+  background: #fafafa;
+  font-weight: 600;
+}
+
+.ant-table-tbody > tr:hover > td {
+  background: #f0f7ff;
+}
+
+/* Progress Bar Styles */
+.ant-progress-line {
+  margin-top: 4px;
+}
+
+.ant-progress-bg {
+  border-radius: 2px;
+}
+
+/* Tags */
+.ant-tag {
+  border-radius: 4px;
+  font-size: 12px;
+  padding: 2px 8px;
+}
+
+/* Buttons */
+.ant-btn-sm {
+  height: 28px;
+  padding: 0 12px;
+  font-size: 12px;
+}
+
+.ant-btn-primary.ant-btn-dangerous {
+  border-color: #ff4d4f;
+}
+
+.ant-btn-primary.ant-btn-dangerous:hover {
+  background: #ff7875;
+  border-color: #ff7875;
+}
+
+/* Cards */
+.ant-card {
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.ant-card-head {
+  border-bottom: 1px solid #f0f0f0;
+}
+
+.ant-card-head-title {
+  font-weight: 600;
+  color: #262626;
+}
+
+/* Tabs */
+.ant-tabs-card > .ant-tabs-content {
+  margin-top: 16px;
+}
+
+.ant-tabs-card .ant-tabs-tab {
+  border-radius: 6px 6px 0 0;
+  background: white;
+}
+
+.ant-tabs-card .ant-tabs-tab-active {
+  background: #1890ff;
+  color: white;
+}
+
+/* Alerts */
+.ant-alert {
+  border-radius: 6px;
+  margin-bottom: 16px;
+}
+
+/* Badge */
+.ant-badge {
+  font-size: 12px;
+  font-weight: bold;
+}
+
+/* Queue Position Badge */
+.queue-position-badge {
+  background: #1890ff;
+  color: white;
+  border-radius: 50%;
+  width: 24px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  font-weight: bold;
+}
+
+/* Loading States */
+.ant-spin-container {
+  position: relative;
+}
+
+.ant-table-loading .ant-table-tbody > tr > td {
+  background: #fafafa;
+}
+
+/* Custom Colors for Different Priorities */
+.priority-high {
+  color: #ff4d4f;
+  font-weight: bold;
+}
+
+.priority-medium {
+  color: #faad14;
+  font-weight: bold;
+}
+
+.priority-low {
+  color: #52c41a;
+}
+
+/* Time Remaining Progress Bars */
+.time-remaining-container {
+  min-width: 120px;
+}
+
+.time-remaining-text {
+  font-size: 12px;
+  font-weight: 500;
+  margin-bottom: 4px;
+}
+
+.time-remaining-progress {
+  margin-top: 4px;
+}
+
+/* Action Buttons Spacing */
+.action-buttons {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.action-buttons .ant-btn {
+  margin: 0;
+}
+
+/* Extension Request Cards */
+.extension-request-card {
+  border-left: 4px solid #faad14;
+  margin-bottom: 16px;
+}
+
+.extension-request-urgent {
+  border-left-color: #ff4d4f;
+}
+
+/* Queue Management Cards */
+.queue-card {
+  margin-bottom: 16px;
+  border-left: 4px solid #1890ff;
+}
+
+.queue-empty {
+  text-align: center;
+  padding: 40px;
+  color: #999;
+}
+
+.queue-stats {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+  padding: 12px;
+  background: #f8f9fa;
+  border-radius: 6px;
+}
+
+/* Session Timer Animations */
+.session-timer-critical {
+  animation: pulse-red 2s infinite;
+}
+
+@keyframes pulse-red {
+  0% { box-shadow: 0 0 0 0 rgba(255, 77, 79, 0.7); }
+  70% { box-shadow: 0 0 0 10px rgba(255, 77, 79, 0); }
+  100% { box-shadow: 0 0 0 0 rgba(255, 77, 79, 0); }
+}
+
+.session-timer-warning {
+  animation: pulse-orange 3s infinite;
+}
+
+@keyframes pulse-orange {
+  0% { box-shadow: 0 0 0 0 rgba(250, 173, 20, 0.7); }
+  70% { box-shadow: 0 0 0 10px rgba(250, 173, 20, 0); }
+  100% { box-shadow: 0 0 0 0 rgba(250, 173, 20, 0); }
+}
+
+/* Status Indicators */
+.status-active {
+  color: #52c41a;
+  font-weight: 600;
+}
+
+.status-waiting {
+  color: #faad14;
+  font-weight: 600;
+}
+
+.status-expired {
+  color: #ff4d4f;
+  font-weight: 600;
+}
+
+/* Modal Customizations */
+.ant-modal-header {
+  border-bottom: 1px solid #f0f0f0;
+  border-radius: 8px 8px 0 0;
+}
+
+.ant-modal-content {
+  border-radius: 8px;
+}
+
+/* Notification Customizations */
+.ant-notification {
+  border-radius: 8px;
+}
+
+/* Responsive Design */
+@media (max-width: 1200px) {
+  .guest-control-panel {
+    padding: 20px;
+  }
+  
+  .panel-header {
+    padding: 16px;
+  }
+  
+  .ant-statistic-content {
+    font-size: 22px;
+  }
+}
+
+@media (max-width: 768px) {
+  .guest-control-panel {
+    padding: 16px;
+  }
+  
+  .panel-header {
+    flex-direction: column;
+    gap: 16px;
+    text-align: center;
+  }
+  
+  .panel-header h2 {
+    margin-bottom: 0;
+  }
+  
+  .ant-statistic-content {
+    font-size: 20px;
+  }
+  
+  .ant-table-wrapper {
+    overflow-x: auto;
+  }
+  
+  .ant-btn-sm {
+    padding: 0 8px;
+    font-size: 11px;
+  }
+  
+  .action-buttons {
+    flex-direction: column;
+    gap: 4px;
+  }
+  
+  .action-buttons .ant-btn {
+    width: 100%;
+  }
+  
+  .time-remaining-container {
+    min-width: 100px;
+  }
+  
+  .queue-stats {
+    flex-direction: column;
+    gap: 8px;
+    text-align: center;
+  }
+}
+
+@media (max-width: 576px) {
+  .guest-control-panel {
+    padding: 12px;
+  }
+  
+  .panel-header {
+    padding: 12px;
+  }
+  
+  .ant-col {
+    margin-bottom: 16px;
+  }
+  
+  .ant-statistic-content {
+    font-size: 18px;
+  }
+  
+  .ant-card {
+    margin-bottom: 12px;
+  }
+  
+  .ant-card-head {
+    padding: 12px;
+  }
+  
+  .ant-card-body {
+    padding: 12px;
+  }
+  
+  .ant-table-small {
+    font-size: 11px;
+  }
+  
+  .ant-tabs-card .ant-tabs-tab {
+    padding: 8px 12px;
+    font-size: 12px;
+  }
+}
+
+/* Dark Mode Support (if needed) */
+@media (prefers-color-scheme: dark) {
+  .guest-control-panel {
+    background: #141414;
+    color: #fff;
+  }
+  
+  .panel-header {
+    background: #1f1f1f;
+    color: #fff;
+  }
+  
+  .ant-card {
+    background: #1f1f1f;
+    border-color: #303030;
+  }
+  
+  .ant-table {
+    background: #1f1f1f;
+    color: #fff;
+  }
+  
+  .ant-table-thead > tr > th {
+    background: #262626;
+    color: #fff;
+    border-color: #303030;
+  }
+  
+  .ant-table-tbody > tr > td {
+    border-color: #303030;
+    color: #fff;
+  }
+  
+  .ant-table-tbody > tr:hover > td {
+    background: #262626;
+  }
+}
+
+/* Print Styles */
+@media print {
+  .guest-control-panel {
+    background: white;
+    padding: 0;
+  }
+  
+  .panel-header {
+    box-shadow: none;
+    border: 1px solid #ddd;
+  }
+  
+  .ant-btn {
+    display: none;
+  }
+  
+  .ant-tabs-nav {
+    display: none;
+  }
+  
+  .ant-card {
+    box-shadow: none;
+    border: 1px solid #ddd;
+    margin-bottom: 20px;
+  }
+}

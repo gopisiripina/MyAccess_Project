@@ -9,13 +9,25 @@ const { processQueue, getQueuePosition } = require('../services/queueService');
 exports.getProjects = async (req, res) => {
   const userId = req.headers.userid;
   const userRole = req.headers.role;
+  const userEmail = req.headers.email;
+
+  console.log('getProjects called with:', { userId, userRole, userEmail });
 
   try {
+    // Validate required headers
+    if (!userId || !userRole) {
+      console.log('Missing required headers');
+      return res.status(400).json({ message: 'Missing required authentication headers' });
+    }
+
     const projectsRef = rtdb.ref('projects');
     const snapshot = await projectsRef.once('value');
     const allProjects = snapshot.val();
     
+    console.log('Raw projects data:', allProjects ? Object.keys(allProjects) : 'No projects');
+    
     if (!allProjects) {
+      console.log('No projects found in database');
       return res.status(200).json([]); // Return empty array if no projects exist
     }
     
@@ -24,21 +36,40 @@ exports.getProjects = async (req, res) => {
     for (const projectId in allProjects) {
       const project = allProjects[projectId];
       
-      // Check access (either by role or specific user access)
-      if (project.access && (project.access[userRole] || project.access[userId])) {
+      console.log(`Checking access for project ${projectId}:`, {
+        projectAccess: project.access,
+        userRole,
+        userId,
+        hasRoleAccess: project.access && project.access[userRole],
+        hasUserAccess: project.access && project.access[userId]
+      });
+      
+      // For guests, return all projects (they'll be filtered by queue system)
+      if (userRole === 'guest') {
         accessibleProjects.push({
           id: projectId,
-          name: project.name,
-          description: project.description,
+          name: project.name || `Project ${projectId}`,
+          description: project.description || 'No description available',
+          createdAt: project.createdAt || null
+        });
+      } 
+      // For regular users, check normal access
+      else if (project.access && (project.access[userRole] || project.access[userId])) {
+        accessibleProjects.push({
+          id: projectId,
+          name: project.name || `Project ${projectId}`,
+          description: project.description || 'No description available',
           createdAt: project.createdAt || null
         });
       }
     }
     
+    console.log('Accessible projects for user:', accessibleProjects.map(p => ({ id: p.id, name: p.name })));
     res.status(200).json(accessibleProjects);
+    
   } catch (error) {
     console.error('Error fetching projects:', error);
-    res.status(500).json({ message: 'Server error' });
+    res.status(500).json({ message: 'Server error while fetching projects' });
   }
 };
 
@@ -58,7 +89,7 @@ exports.getProjectById = async (req, res) => {
     }
     
     // Check access
-    if (!project.access || (!project.access[userRole] && !project.access[userId])) {
+    if (userRole !== 'guest' && (!project.access || (!project.access[userRole] && !project.access[userId]))) {
       return res.status(403).json({ message: 'Access denied' });
     }
     
@@ -73,10 +104,11 @@ exports.getProjectById = async (req, res) => {
 };
 
 // Get project dashboard data
-// Update the getProjectDashboard function to handle guests
 exports.getProjectDashboard = async (req, res) => {
   const { projectId } = req.params;
   const { userid, role } = req.headers;
+
+  console.log('getProjectDashboard called:', { projectId, userid, role });
 
   try {
     const projectRef = rtdb.ref(`projects/${projectId}`);
@@ -86,8 +118,9 @@ exports.getProjectDashboard = async (req, res) => {
     if (!projectData) {
       return res.status(404).json({ message: 'Project not found' });
     }
+
     // For superadmin, admin, and regular users with direct access
-    if (role === 'guest'|| role === 'admin' || role === 'superadmin'|| role === 'user') { 
+    if (role === 'admin' || role === 'superadmin' || role === 'user') { 
       // Check if user has access through role or specific user access
       if (projectData.access && (projectData.access[role] || projectData.access[userid])) {
         // Return full project data for authorized users
@@ -97,68 +130,86 @@ exports.getProjectDashboard = async (req, res) => {
     }
 
     // Guest-specific access flow
-    // Check for active session first
-    const activeSessionRef = db.collection('guestSessions')
-      .where('projectId', '==', projectId)
-      .where('userId', '==', userid)
-      .where('status', '==', 'active')
-      .limit(1);
-    
-    const activeSnapshot = await activeSessionRef.get();
-    
-    if (!activeSnapshot.empty) {
-      // User has an active session, return limited data for guests
-      const filteredData = {
-        name: projectData.name,
-        description: projectData.description,
-        access: {
-          role: 'guest',
-          sessionActive: true
-        },
-        // Include only basic vehicle info for guests
-        vehicles: Object.entries(projectData.vehicles || {}).reduce((acc, [key, value]) => {
-          acc[key] = {
-            location: value.location,
-            speed: value.speed
-          };
-          return acc;
-        }, {})
-      };
-      return res.status(200).json(filteredData);
-    }
-
-    // If no active session, check if they're in the queue
-    const queueRef = db.collection('queues').doc(projectId);
-    const queueDoc = await queueRef.get();
-    
-    if (queueDoc.exists) {
-      const queue = queueDoc.data().queue || [];
-      const userInQueue = queue.find(user => user.userId === userid);
+    if (role === 'guest') {
+      // Check for active session first
+      const activeSessionRef = db.collection('guestSessions')
+        .where('projectId', '==', projectId)
+        .where('userId', '==', userid)
+        .where('status', '==', 'active')
+        .limit(1);
       
-      if (userInQueue) {
-        return res.status(200).json({
+      const activeSnapshot = await activeSessionRef.get();
+      
+      if (!activeSnapshot.empty) {
+        // User has an active session, return limited data for guests
+        const filteredData = {
           name: projectData.name,
           description: projectData.description,
-          accessInfo: {
-            inQueue: true,
-            position: queue.findIndex(user => user.userId === userid) + 1,
-            estimatedWait: queue.length * 60000 // 1 minute per user in queue
-          }
-        });
+          access: {
+            role: 'guest',
+            sessionActive: true
+          },
+          // Include basic device info for guests
+          devices: projectData.devices ? Object.entries(projectData.devices).reduce((acc, [key, value]) => {
+            acc[key] = {
+              name: value.name || key,
+              status: value.status || 'Unknown',
+              energy_usage: value.energy_usage,
+              temperature: value.temperature,
+              last_updated: value.last_updated
+            };
+            return acc;
+          }, {}) : {},
+          // Include basic vehicle info for guests
+          vehicles: projectData.vehicles ? Object.entries(projectData.vehicles).reduce((acc, [key, value]) => {
+            acc[key] = {
+              name: value.name || key,
+              location: value.location,
+              speed: value.speed
+            };
+            return acc;
+          }, {}) : {}
+        };
+        return res.status(200).json(filteredData);
       }
+
+      // If no active session, check if they're in the queue
+      const queueRef = db.collection('queues').doc(projectId);
+      const queueDoc = await queueRef.get();
+      
+      if (queueDoc.exists) {
+        const queue = queueDoc.data().queue || [];
+        const userInQueue = queue.find(user => user.userId === userid);
+        
+        if (userInQueue) {
+          return res.status(200).json({
+            name: projectData.name,
+            description: projectData.description,
+            accessInfo: {
+              inQueue: true,
+              position: queue.findIndex(user => user.userId === userid) + 1,
+              estimatedWait: queue.length * 60000 // 1 minute per user in queue
+            }
+          });
+        }
+      }
+
+      // No access granted
+      return res.status(403).json({ 
+        message: "Access denied. No active session or queue position found.",
+        suggestion: "Request access to join the queue"
+      });
     }
 
-    // No access granted
-    return res.status(403).json({ 
-      message: "Access denied. No active session or queue position found.",
-      suggestion: "Request access to join the queue"
-    });
+    // Unknown role
+    return res.status(403).json({ message: "Invalid user role" });
 
   } catch (error) {
     console.error('Dashboard error:', error);
     res.status(500).json({ message: "Server error" });
   }
 };
+
 // Add new project (admin/superadmin only)
 exports.addProject = async (req, res) => {
   const { name, description } = req.body;
@@ -271,201 +322,15 @@ exports.updateDeviceStatus = async (req, res) => {
     res.status(500).json({ message: "Failed to update device" });
   }
 };
-// In your projectController.js
-exports.getProjects = async (req, res) => {
-  const userId = req.headers.userid;
-  const userRole = req.headers.role;
-  
-  try {
-    const projectsRef = rtdb.ref('projects');
-    const snapshot = await projectsRef.once('value');
-    const allProjects = snapshot.val();
-
-    if (!allProjects) {
-      return res.status(200).json([]);
-    }
-
-    const accessibleProjects = [];
-    for (const projectId in allProjects) {
-      const project = allProjects[projectId];
-      
-      // For guests, check if project has user access or guest access is allowed
-      if (userRole === 'guest') {
-        accessibleProjects.push({
-          id: projectId,
-          name: project.name,
-          description: project.description,
-          createdAt: project.createdAt || null
-        });
-      } 
-      // For regular users, check normal access
-      else if (project.access && (project.access[userRole] || project.access[userId])) {
-        accessibleProjects.push({
-          id: projectId,
-          name: project.name,
-          description: project.description,
-          createdAt: project.createdAt || null
-        });
-      }
-    }
-    
-    res.status(200).json(accessibleProjects);
-  } catch (error) {
-    console.error('Error fetching projects:', error);
-    res.status(500).json({ message: 'Server error' });
-  }
-};
-// Add these methods to your projectController.js
-
-// Get all projects with guest access
-exports.getGuestProjects = async (req, res) => {
-  const userId = req.headers.userid;
-  const email = req.headers.email;
-
-  try {
-    const projectsRef = rtdb.ref('projects');
-    const snapshot = await projectsRef.once('value');
-    const allProjects = snapshot.val();
-
-    if (!allProjects) {
-      return res.status(200).json([]);
-    }
-
-    // For guests, return all projects with their current access state
-    const projectsWithAccess = [];
-    const accessStates = {};
-
-    // First check current access states from Firestore
-    const accessRef = db.collection('projectAccess');
-    const accessSnapshot = await accessRef.get();
-    accessSnapshot.forEach(doc => {
-      accessStates[doc.id] = doc.data();
-    });
-
-    // Then check queue positions
-    const queueRef = db.collection('queues');
-    const queueSnapshot = await queueRef.get();
-    const queuePositions = {};
-    queueSnapshot.forEach(doc => {
-      const queue = doc.data().queue || [];
-      queue.forEach((user, index) => {
-        if (user.userId === userId) {
-          queuePositions[doc.id] = index + 1;
-        }
-      });
-    });
-
-    // Prepare response
-    for (const projectId in allProjects) {
-      const project = allProjects[projectId];
-      const accessState = accessStates[projectId] || { isFree: true };
-      const queuePosition = queuePositions[projectId];
-
-      projectsWithAccess.push({
-        id: projectId,
-        name: project.name,
-        description: project.description,
-        createdAt: project.createdAt || null,
-        access: {
-          isFree: accessState.isFree,
-          currentOccupant: accessState.currentOccupant,
-          queuePosition: queuePosition
-        }
-      });
-    }
-
-    res.status(200).json(projectsWithAccess);
-  } catch (error) {
-    console.error('Error fetching guest projects:', error);
-    res.status(500).json({ message: 'Server error' });
-  }
-};
 
 // Handle guest access request
-exports.handleGuestAccess = async (req, res) => {
-  const { projectId } = req.params;
-  const userId = req.headers.userid;
-  const email = req.headers.email;
-
-  try {
-    // Check if project exists
-    const projectRef = rtdb.ref(`projects/${projectId}`);
-    const snapshot = await projectRef.once('value');
-    if (!snapshot.exists()) {
-      return res.status(404).json({ message: 'Project not found' });
-    }
-
-    const accessRef = db.collection('projectAccess').doc(projectId);
-    const accessDoc = await accessRef.get();
-    const accessData = accessDoc.exists ? accessDoc.data() : { isFree: true };
-
-    if (accessData.isFree) {
-      // Grant access
-      await accessRef.set({
-        isFree: false,
-        currentOccupant: userId,
-        lastAccessed: admin.firestore.FieldValue.serverTimestamp()
-      }, { merge: true });
-
-      // Create session
-      const sessionId = uuidv4();
-      await db.collection('guestSessions').doc(sessionId).set({
-        email,
-        projectId,
-        status: 'active',
-        startTime: admin.firestore.FieldValue.serverTimestamp(),
-        timerEnds: new Date(Date.now() + 60000) // 60 seconds
-      });
-
-      return res.status(200).json({ 
-        accessGranted: true,
-        sessionId,
-        timerEnds: new Date(Date.now() + 60000).toISOString()
-      });
-    } else {
-      // Add to queue
-      const queueRef = db.collection('queues').doc(projectId);
-      const queueDoc = await queueRef.get();
-      const currentQueue = queueDoc.exists ? queueDoc.data().queue || [] : [];
-      
-      // Check if user is already in queue
-      const alreadyInQueue = currentQueue.some(user => user.userId === userId);
-      if (alreadyInQueue) {
-        const position = currentQueue.findIndex(user => user.userId === userId) + 1;
-        return res.status(200).json({
-          accessGranted: false,
-          message: 'You are already in queue',
-          position: position
-        });
-      }
-
-      // Add to queue
-      await queueRef.set({
-        queue: [...currentQueue, {
-          userId,
-          email,
-          joinedAt: admin.firestore.FieldValue.serverTimestamp(),
-          priority: 5 // Lowest for guests
-        }]
-      }, { merge: true });
-
-      return res.status(200).json({ 
-        accessGranted: false,
-        message: 'Added to queue',
-        position: currentQueue.length + 1
-      });
-    }
-  } catch (error) {
-    console.error('Guest access error:', error);
-    res.status(500).json({ message: 'Server error' });
-  }
-};
-// Fix for the requestProjectAccess function in projectController.js
 exports.requestProjectAccess = async (req, res) => {
   const { projectId } = req.params;
   const userId = req.headers.userid;
   const email = req.headers.email;
   const role = req.headers.role;
+
+  console.log('requestProjectAccess called:', { projectId, userId, email, role });
 
   if (!userId || !email) {
     return res.status(400).json({ message: 'Valid credentials are required' });
@@ -479,26 +344,33 @@ exports.requestProjectAccess = async (req, res) => {
       return res.status(404).json({ message: 'Project not found' });
     }
 
-    // Check current access state
-    const accessRef = db.collection('projectAccess').doc(projectId);
-    const accessDoc = await accessRef.get();
-    const accessData = accessDoc.exists ? accessDoc.data() : { isFree: true };
-
     // Check if user already has active session
     const activeSession = await db.collection('guestSessions')
       .where('userId', '==', userId)
+      .where('projectId', '==', projectId)
       .where('status', '==', 'active')
       .limit(1)
       .get();
 
     if (!activeSession.empty) {
       const session = activeSession.docs[0].data();
-      return res.status(200).json({
-        accessGranted: true,
-        sessionId: activeSession.docs[0].id,
-        timerEnds: session.timerEnds.toDate().toISOString()
-      });
+      const timerEnds = session.timerEnds.toDate();
+      const remainingTime = timerEnds.getTime() - Date.now();
+      
+      if (remainingTime > 0) {
+        return res.status(200).json({
+          accessGranted: true,
+          sessionId: activeSession.docs[0].id,
+          timerEnds: timerEnds.toISOString(),
+          remainingTime: remainingTime
+        });
+      }
     }
+
+    // Check current access state
+    const accessRef = db.collection('projectAccess').doc(projectId);
+    const accessDoc = await accessRef.get();
+    const accessData = accessDoc.exists ? accessDoc.data() : { isFree: true };
 
     if (accessData.isFree) {
       // Grant access
@@ -511,15 +383,13 @@ exports.requestProjectAccess = async (req, res) => {
       // Create session with appropriate duration based on role
       const sessionId = uuidv4();
       
-      // THIS IS THE KEY FIX: Ensure we're using the correct session duration for each role
       let sessionDuration;
       if (role === 'guest') {
-        sessionDuration = config.guest.sessionDuration; // 60000 milliseconds (60 seconds)
+        sessionDuration = config?.guest?.sessionDuration || 60000; // 60 seconds default
       } else if (role === 'admin' || role === 'superadmin' || role === 'user') {
-        sessionDuration = config.regular.sessionDuration; // 300000 milliseconds (5 minutes)
+        sessionDuration = config?.regular?.sessionDuration || 300000; // 5 minutes default
       } else {
-        // Default fallback
-        sessionDuration = config.guest.sessionDuration;
+        sessionDuration = 60000; // Default fallback
       }
       
       const timerEnds = new Date(Date.now() + sessionDuration);
@@ -527,7 +397,7 @@ exports.requestProjectAccess = async (req, res) => {
       await db.collection('guestSessions').doc(sessionId).set({
         userId,
         email,
-        role, // Store the role to know the type of user
+        role,
         projectId,
         status: 'active',
         startTime: admin.firestore.FieldValue.serverTimestamp(),
@@ -536,15 +406,20 @@ exports.requestProjectAccess = async (req, res) => {
       });
 
       // Update user's active sessions count
-      const userRef = db.collection('users').doc(userId);
-      await userRef.update({
-        activeSessions: admin.firestore.FieldValue.increment(1)
-      });
+      try {
+        const userRef = db.collection('users').doc(userId);
+        await userRef.update({
+          activeSessions: admin.firestore.FieldValue.increment(1)
+        });
+      } catch (userUpdateError) {
+        console.warn('Could not update user session count:', userUpdateError);
+      }
 
       return res.status(200).json({ 
         accessGranted: true,
         sessionId,
-        timerEnds: timerEnds.toISOString()
+        timerEnds: timerEnds.toISOString(),
+        remainingTime: sessionDuration
       });
     } else {
       // Add to queue with priority based on role
@@ -575,22 +450,20 @@ exports.requestProjectAccess = async (req, res) => {
           break;
       }
 
-      // Fix for the serverTimestamp in array issue
+      // Add user to queue
       const queueRef = db.collection('queues').doc(projectId);
       const queueDoc = await queueRef.get();
       const currentQueue = queueDoc.exists ? queueDoc.data().queue || [] : [];
       
-      // Create timestamp that works in arrays
       const nowTimestamp = admin.firestore.Timestamp.now();
       
-      // Add user to queue with proper priority
       await queueRef.set({
         queue: [...currentQueue, {
           userId,
           email,
-          role, // Store role to validate priority later
+          role,
           joinedAt: nowTimestamp,
-          priority: priority,
+          priority: priority,priority: priority,
           requestedExtension: false
         }]
       }, { merge: true });
