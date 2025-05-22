@@ -5,6 +5,7 @@ import WelcomeDashboard from './WelcomeDashboard';
 import UsersList from './UsersList';
 import AdminsList from './AdminsList';
 import ProjectsList from './ProjectsList';
+import GuestControlPanel from './GuestControlPanel';
 import '../styles/Dashboard.css';
 
 const Dashboard = () => {
@@ -17,7 +18,7 @@ const Dashboard = () => {
   const urlTab = searchParams.get('tab');
 
   useEffect(() => {
-    if (urlTab && ['dashboard', 'admins', 'users', 'devices'].includes(urlTab)) {
+    if (urlTab && ['dashboard', 'admins', 'users', 'devices', 'guests'].includes(urlTab)) {
       setActiveTab(urlTab);
     }
   }, [urlTab]);
@@ -32,8 +33,8 @@ const Dashboard = () => {
 
     // Updated logic to include guest role restrictions
     if ((role === 'admin' && activeTab === 'admins') || 
-        (role === 'user' && (activeTab === 'admins' || activeTab === 'users')) ||
-        (role === 'guest' && (activeTab === 'admins' || activeTab === 'users'))) {
+        (role === 'user' && (activeTab === 'admins' || activeTab === 'users' || activeTab === 'guests')) ||
+        (role === 'guest' && (activeTab === 'admins' || activeTab === 'users' || activeTab === 'guests'))) {
       setActiveTab('dashboard');
       navigate('/dashboard?tab=dashboard');
     }
@@ -67,6 +68,8 @@ const Dashboard = () => {
         return (userRole === 'superadmin' || userRole === 'admin') ? <UsersList userRole={userRole} /> : <Navigate to="/dashboard?tab=dashboard" />;
       case 'devices':
         return <ProjectsList userRole={userRole} />;
+      case 'guests':
+        return (userRole === 'superadmin' || userRole === 'admin') ? <GuestControlPanel userRole={userRole} /> : <Navigate to="/dashboard?tab=dashboard" />;
       default:
         return <WelcomeDashboard userRole={userRole} />;
     }
