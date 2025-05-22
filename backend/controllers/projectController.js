@@ -86,33 +86,79 @@ exports.getProjectDashboard = async (req, res) => {
     if (!projectData) {
       return res.status(404).json({ message: 'Project not found' });
     }
-
-    // For guests, check the active session
-    if (role === 'guest') {
-      const sessionRef = db.collection('guestSessions')
-        .where('projectId', '==', projectId)
-        .where('userId', '==', userid)
-        .where('status', '==', 'active')
-        .limit(1);
-      
-      const sessionSnapshot = await sessionRef.get();
-      
-      if (sessionSnapshot.empty) {
-        return res.status(403).json({ message: "Guest session expired or invalid" });
+    // For superadmin, admin, and regular users with direct access
+    if (role === 'guest'|| role === 'admin' || role === 'superadmin'|| role === 'user') { 
+      // Check if user has access through role or specific user access
+      if (projectData.access && (projectData.access[role] || projectData.access[userid])) {
+        // Return full project data for authorized users
+        return res.status(200).json(projectData);
       }
-    } 
-    // For regular users, check normal access
-    else if (!projectData.access || (!projectData.access[role] && !projectData.access[userid])) {
       return res.status(403).json({ message: "Access denied" });
     }
 
-    res.status(200).json(projectData);
+    // Guest-specific access flow
+    // Check for active session first
+    const activeSessionRef = db.collection('guestSessions')
+      .where('projectId', '==', projectId)
+      .where('userId', '==', userid)
+      .where('status', '==', 'active')
+      .limit(1);
+    
+    const activeSnapshot = await activeSessionRef.get();
+    
+    if (!activeSnapshot.empty) {
+      // User has an active session, return limited data for guests
+      const filteredData = {
+        name: projectData.name,
+        description: projectData.description,
+        access: {
+          role: 'guest',
+          sessionActive: true
+        },
+        // Include only basic vehicle info for guests
+        vehicles: Object.entries(projectData.vehicles || {}).reduce((acc, [key, value]) => {
+          acc[key] = {
+            location: value.location,
+            speed: value.speed
+          };
+          return acc;
+        }, {})
+      };
+      return res.status(200).json(filteredData);
+    }
+
+    // If no active session, check if they're in the queue
+    const queueRef = db.collection('queues').doc(projectId);
+    const queueDoc = await queueRef.get();
+    
+    if (queueDoc.exists) {
+      const queue = queueDoc.data().queue || [];
+      const userInQueue = queue.find(user => user.userId === userid);
+      
+      if (userInQueue) {
+        return res.status(200).json({
+          name: projectData.name,
+          description: projectData.description,
+          accessInfo: {
+            inQueue: true,
+            position: queue.findIndex(user => user.userId === userid) + 1,
+            estimatedWait: queue.length * 60000 // 1 minute per user in queue
+          }
+        });
+      }
+    }
+
+    // No access granted
+    return res.status(403).json({ 
+      message: "Access denied. No active session or queue position found.",
+      suggestion: "Request access to join the queue"
+    });
+
   } catch (error) {
     console.error('Dashboard error:', error);
     res.status(500).json({ message: "Server error" });
   }
 };
-
 // Add new project (admin/superadmin only)
 exports.addProject = async (req, res) => {
   const { name, description } = req.body;

@@ -3,16 +3,17 @@ const { v4: uuidv4 } = require('uuid');
 const admin = require('firebase-admin');
 const config = require('../config');
 const { processQueue, getQueuePosition } = require('../services/queueService');
+const queueMonitoringService = require('../services/queueMonitoringService');
+
 
 exports.guestLogin = async (req, res) => {
   const { email } = req.body;
-  
+
   if (!email || !email.includes('@')) {
     return res.status(400).json({ message: 'Valid email is required' });
   }
 
   try {
-    // Check if guest already exists
     const guestQuery = await db.collection('users')
       .where('email', '==', email)
       .where('role', '==', 'guest')
@@ -56,19 +57,16 @@ exports.requestProjectAccess = async (req, res) => {
   }
 
   try {
-    // Verify project exists
     const projectRef = rtdb.ref(`projects/${projectId}`);
     const snapshot = await projectRef.once('value');
     if (!snapshot.exists()) {
       return res.status(404).json({ message: 'Project not found' });
     }
 
-    // Check current access state
     const accessRef = db.collection('projectAccess').doc(projectId);
     const accessDoc = await accessRef.get();
     const accessData = accessDoc.exists ? accessDoc.data() : { isFree: true };
 
-    // Check if user already has active session for this project
     const activeSession = await db.collection('guestSessions')
       .where('userId', '==', userId)
       .where('projectId', '==', projectId)
@@ -86,23 +84,19 @@ exports.requestProjectAccess = async (req, res) => {
     }
 
     if (accessData.isFree) {
-      // Grant access
       await accessRef.set({
         isFree: false,
         currentOccupant: userId,
         lastAccessed: admin.firestore.FieldValue.serverTimestamp()
       }, { merge: true });
 
-      // Create session - ENSURE we use guest session duration
       const sessionId = uuidv4();
-      
-      // ALWAYS use guest session duration for this controller
       const timerEnds = new Date(Date.now() + config.guest.sessionDuration);
-      
+
       await db.collection('guestSessions').doc(sessionId).set({
         userId,
         email,
-        role: 'guest', // Explicitly set the role
+        role: 'guest',
         projectId,
         status: 'active',
         startTime: admin.firestore.FieldValue.serverTimestamp(),
@@ -110,7 +104,6 @@ exports.requestProjectAccess = async (req, res) => {
         extended: false
       });
 
-      // Update guest's active sessions count
       const guestRef = db.collection('users').doc(userId);
       await guestRef.update({
         activeSessions: admin.firestore.FieldValue.increment(1)
@@ -122,7 +115,6 @@ exports.requestProjectAccess = async (req, res) => {
         timerEnds: timerEnds.toISOString()
       });
     } else {
-      // Add to queue
       const position = await getQueuePosition(projectId, userId);
       if (position) {
         return res.status(200).json({ 
@@ -132,30 +124,48 @@ exports.requestProjectAccess = async (req, res) => {
         });
       }
 
-      // Fix for the serverTimestamp in array issue
       const queueRef = db.collection('queues').doc(projectId);
       const queueDoc = await queueRef.get();
       const currentQueue = queueDoc.exists ? queueDoc.data().queue || [] : [];
-      
-      // Use a regular timestamp (current date) instead of serverTimestamp for array elements
+
       const nowTimestamp = new Date();
-      
       await queueRef.set({
         queue: [...currentQueue, {
           userId,
           email,
-          role: 'guest', // Always set the role explicitly
-          joinedAt: nowTimestamp, // Use a regular Date object instead of serverTimestamp
+          role: 'guest',
+          joinedAt: nowTimestamp,
           priority: config.guest.priority,
           requestedExtension: false
         }]
       }, { merge: true });
 
+      const newPosition = currentQueue.length + 1;
+
+      // 🔁 Get remaining time of current occupant
+      let currentSessionRemainingTime = 0;
+      if (!accessData.isFree && accessData.currentOccupant) {
+        const occupantSession = await db.collection('guestSessions')
+          .where('userId', '==', accessData.currentOccupant)
+          .where('projectId', '==', projectId)
+          .where('status', '==', 'active')
+          .limit(1)
+          .get();
+
+        if (!occupantSession.empty) {
+          const occupantData = occupantSession.docs[0].data();
+          const endTime = occupantData.timerEnds.toDate();
+          const now = new Date();
+          currentSessionRemainingTime = Math.max(0, endTime - now);
+        }
+      }
+
       return res.status(200).json({ 
         accessGranted: false,
         message: 'Added to queue',
-        position: currentQueue.length + 1,
-        estimatedWait: currentQueue.length * config.guest.sessionDuration
+        position: newPosition,
+        estimatedWait: currentSessionRemainingTime + (newPosition - 1) * config.guest.sessionDuration,
+        remainingTimeOfCurrentUser: currentSessionRemainingTime
       });
     }
   } catch (error) {
@@ -181,26 +191,22 @@ exports.endSession = async (req, res) => {
       return res.status(403).json({ message: 'Not authorized to end this session' });
     }
 
-    // Update session
     await sessionRef.update({
       status: 'completed',
       endTime: admin.firestore.FieldValue.serverTimestamp()
     });
 
-    // Free up the project
     const accessRef = db.collection('projectAccess').doc(session.projectId);
     await accessRef.update({
       isFree: true,
       currentOccupant: null
     });
 
-    // Update guest's active sessions count
     const guestRef = db.collection('users').doc(userId);
     await guestRef.update({
       activeSessions: admin.firestore.FieldValue.increment(-1)
     });
 
-    // Process next in queue
     const nextUser = await processQueue(session.projectId);
 
     res.status(200).json({ 
@@ -234,7 +240,6 @@ exports.requestTimeExtension = async (req, res) => {
       return res.status(400).json({ message: 'Session already extended' });
     }
 
-    // Create extension request
     await db.collection('extensionRequests').add({
       sessionId,
       userId,
@@ -253,5 +258,69 @@ exports.requestTimeExtension = async (req, res) => {
   } catch (error) {
     console.error('Extension request error:', error);
     res.status(500).json({ message: 'Server error while requesting extension' });
+  }
+};
+// Get current queue status for a user
+exports.getQueueStatus = async (req, res) => {
+  const { projectId } = req.params;
+  const userId = req.headers.userid;
+
+  if (!userId || !userId.startsWith('guest_')) {
+    return res.status(400).json({ message: 'Valid guest credentials are required' });
+  }
+
+  try {
+    const queueStatus = await queueMonitoringService.getQueueStatus(projectId, userId);
+    
+    // Also check if user has active session
+    const activeSession = await db.collection('guestSessions')
+      .where('userId', '==', userId)
+      .where('projectId', '==', projectId)
+      .where('status', '==', 'active')
+      .limit(1)
+      .get();
+
+    if (!activeSession.empty) {
+      const session = activeSession.docs[0].data();
+      const now = new Date();
+      const timerEnds = session.timerEnds.toDate();
+      const remainingTime = Math.max(0, timerEnds.getTime() - now.getTime());
+      
+      return res.status(200).json({
+        hasActiveSession: true,
+        sessionId: activeSession.docs[0].id,
+        remainingTime: remainingTime,
+        remainingTimeFormatted: Math.ceil(remainingTime / 1000) + 's',
+        ...queueStatus
+      });
+    }
+
+    res.status(200).json({
+      hasActiveSession: false,
+      ...queueStatus
+    });
+    
+  } catch (error) {
+    console.error('Queue status error:', error);
+    res.status(500).json({ message: 'Server error while checking queue status' });
+  }
+};
+
+// Get queue details for a project (for admins)
+exports.getProjectQueueDetails = async (req, res) => {
+  const { projectId } = req.params;
+  
+  try {
+    const queueDetails = await queueMonitoringService.getQueueDetails(projectId);
+    
+    res.status(200).json({
+      projectId,
+      queueLength: queueDetails.length,
+      queue: queueDetails
+    });
+    
+  } catch (error) {
+    console.error('Project queue details error:', error);
+    res.status(500).json({ message: 'Server error while fetching queue details' });
   }
 };
