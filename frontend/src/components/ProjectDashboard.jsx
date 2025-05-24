@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
 import axios from 'axios';
-import { Button, Progress, notification, Modal, Space, Typography, Alert, Card, Row, Col } from 'antd';
+import { Button, Progress, notification, Modal, Space, Typography, Alert, Card, Row, Col, Spin } from 'antd';
 import { 
   FiArrowLeft, 
   FiHome, 
@@ -14,6 +14,7 @@ import {
   FiBattery
 } from 'react-icons/fi';
 import { WiDaySunny, WiRain, WiSnow } from 'react-icons/wi';
+import { LoadingOutlined } from '@ant-design/icons';
 import '../styles/projectdashboard.css';
 
 const { Title, Text } = Typography;
@@ -25,7 +26,7 @@ const ProjectDashboard = () => {
   const sessionId = searchParams.get('sessionId');
   
   const [projectData, setProjectData] = useState(null);
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [sessionTimer, setSessionTimer] = useState(null);
   const [timeRemaining, setTimeRemaining] = useState(0);
@@ -37,6 +38,9 @@ const ProjectDashboard = () => {
   useEffect(() => {
     const role = localStorage.getItem('userRole');
     setUserRole(role);
+    
+    console.log('ProjectDashboard initialized:', { projectId, sessionId, role });
+    
     fetchProjectData();
     
     // If guest with session, start timer
@@ -48,36 +52,84 @@ const ProjectDashboard = () => {
   const fetchProjectData = async () => {
     try {
       setLoading(true);
+      setError('');
+      
       const userId = localStorage.getItem('userId');
+      const email = localStorage.getItem('userEmail');
       const role = localStorage.getItem('userRole');
+      
+      console.log('Fetching project dashboard data:', { userId, role, projectId, sessionId });
+      
+      if (!userId || !role) {
+        throw new Error('Missing authentication credentials');
+      }
       
       const config = {
         headers: {
           'userid': userId,
+          'email': email || '',
           'role': role
         }
       };
 
-      const response = await axios.get(
-        `http://localhost:5000/api/projects/${projectId}/dashboard`,
-        config
-      );
+      // UNIFIED API ENDPOINT - Use the same endpoint for all user types
+      // The backend should handle role-based access control
+      let apiUrl = `http://localhost:5000/api/projects/${projectId}/dashboard`;
       
-      setProjectData(response.data);
+      // Add session parameter if it exists (for guests)
+      if (sessionId) {
+        apiUrl += `?sessionId=${sessionId}`;
+      }
+
+      console.log('Making API request to:', apiUrl);
+      
+      const response = await axios.get(apiUrl, config);
+      
+      console.log('Project dashboard response:', response.data);
+      
+      // Validate and clean the response data
+      const cleanedData = {
+        ...response.data,
+        devices: response.data.devices || {},
+        vehicles: response.data.vehicles || {}
+      };
+      
+      // Log the structure for debugging
+      console.log('Cleaned project data structure:', {
+        hasDevices: Object.keys(cleanedData.devices).length > 0,
+        hasVehicles: Object.keys(cleanedData.vehicles).length > 0,
+        deviceKeys: Object.keys(cleanedData.devices),
+        vehicleKeys: Object.keys(cleanedData.vehicles)
+      });
+      
+      setProjectData(cleanedData);
       setError('');
     } catch (err) {
       console.error('Error fetching project data:', err);
-      setError('Failed to load project dashboard. Please try again.');
+      console.error('Error response:', err.response?.data);
       
-      // If access denied for guest, redirect back
-      if (err.response?.status === 403 && userRole === 'guest') {
+      if (err.response?.status === 401 || err.response?.status === 403) {
+        const message = userRole === 'guest' 
+          ? 'Your session has expired or you don\'t have access to this project.'
+          : 'You don\'t have permission to access this project.';
+          
+        setError(message);
+        
         notification.error({
-          message: 'Access Expired',
-          description: 'Your session has expired. Redirecting back to projects.',
+          message: 'Access Denied',
+          description: message,
+          duration: 5
         });
+        
+        // Redirect after short delay
         setTimeout(() => {
           navigate('/dashboard?tab=devices');
-        }, 2000);
+        }, 3000);
+      } else if (err.response?.status === 404) {
+        setError('Project not found or dashboard data unavailable.');
+      } else {
+        const errorMessage = err.response?.data?.message || err.message || 'Failed to load project dashboard.';
+        setError(errorMessage);
       }
     } finally {
       setLoading(false);
@@ -99,12 +151,17 @@ const ProjectDashboard = () => {
         }
       };
 
+      console.log('Fetching session status for timer...');
+      
+      // Use unified queue status endpoint
       const response = await axios.get(
-        `http://localhost:5000/api/guests/projects/${projectId}/queue-status`,
+        `http://localhost:5000/api/projects/${projectId}/queue-status`,
         config
       );
 
-      if (response.data.hasActiveSession && response.data.remainingTime) {
+      console.log('Session status response:', response.data);
+
+      if (response.data.hasActiveSession && response.data.isCurrentUserSession && response.data.remainingTime) {
         setTimeRemaining(response.data.remainingTime);
         
         const timer = setInterval(() => {
@@ -119,9 +176,19 @@ const ProjectDashboard = () => {
         }, 1000);
         
         setSessionTimer(timer);
+      } else {
+        // Session not active - redirect back
+        console.warn('No active session found for current user');
+        handleSessionExpired();
       }
     } catch (err) {
       console.error('Error fetching session status:', err);
+      // Don't redirect on timer error immediately, give user a chance
+      notification.warning({
+        message: 'Session Status Unknown',
+        description: 'Unable to verify session status. Your access may be limited.',
+        duration: 5
+      });
     }
   };
 
@@ -129,12 +196,16 @@ const ProjectDashboard = () => {
     notification.warning({
       message: 'Session Expired',
       description: 'Your access session has ended. Redirecting back to projects.',
-      duration: 3
+      duration: 5
     });
+    
+    if (sessionTimer) {
+      clearInterval(sessionTimer);
+    }
     
     setTimeout(() => {
       navigate('/dashboard?tab=devices');
-    }, 2000);
+    }, 3000);
   };
 
   const handleEndSession = () => {
@@ -156,9 +227,10 @@ const ProjectDashboard = () => {
             }
           };
 
+          // Use unified session end endpoint
           await axios.post(
-            `http://localhost:5000/api/guests/sessions/${sessionId}/end`,
-            {},
+            `http://localhost:5000/api/projects/${projectId}/end-session`,
+            { sessionId },
             config
           );
 
@@ -178,6 +250,9 @@ const ProjectDashboard = () => {
             message: 'Error',
             description: 'Failed to end session properly.',
           });
+          
+          // Still redirect even if end session fails
+          navigate('/dashboard?tab=devices');
         }
       }
     });
@@ -198,9 +273,10 @@ const ProjectDashboard = () => {
         }
       };
 
+      // Use unified extension request endpoint
       await axios.post(
-        `http://localhost:5000/api/guests/sessions/${sessionId}/request-extension`,
-        {},
+        `http://localhost:5000/api/projects/${projectId}/request-extension`,
+        { sessionId },
         config
       );
 
@@ -242,74 +318,124 @@ const ProjectDashboard = () => {
     return <WiSnow className="status-icon warning" />;
   };
 
-  const renderDeviceCard = (deviceId, device) => (
-    <Card
-      key={deviceId}
-      className="device-card"
-      size="small"
-      title={
-        <Space>
-          {getStatusIcon(device.status)}
-          <Text strong>{device.name || deviceId}</Text>
-        </Space>
+  const renderDeviceCard = (deviceId, device) => {
+    // Safe rendering function for potentially complex data
+    const safeRender = (value, defaultValue = 'N/A') => {
+      if (value === null || value === undefined) return defaultValue;
+      if (typeof value === 'string' || typeof value === 'number') return value;
+      if (typeof value === 'object') {
+        try {
+          return JSON.stringify(value);
+        } catch (e) {
+          return defaultValue;
+        }
       }
-      extra={
-        <Text 
-          className={`status-badge ${device.status.toLowerCase()}`}
-        >
-          {device.status}
-        </Text>
-      }
-    >
-      <Row gutter={16}>
-        <Col span={12}>
-          <Space>
-            <FiBattery size={16} />
-            <Text type="secondary">Energy: </Text>
-            <Text>{device.energy_usage || 'N/A'}W</Text>
-          </Space>
-        </Col>
-        <Col span={12}>
-          <Space>
-            <FiThermometer size={16} />
-            <Text type="secondary">Temp: </Text>
-            <Text>{device.temperature || 'N/A'}°C</Text>
-          </Space>
-        </Col>
-      </Row>
-      {device.last_updated && (
-        <Text type="secondary" style={{ fontSize: '12px' }}>
-          Updated: {new Date(device.last_updated).toLocaleTimeString()}
-        </Text>
-      )}
-    </Card>
-  );
+      return String(value);
+    };
 
-  const renderVehicleCard = (vehicleId, vehicle) => (
-    <Card
-      key={vehicleId}
-      className="vehicle-card"
-      size="small"
-      title={
-        <Space>
-          <FiTruck />
-          <Text strong>{vehicle.name || vehicleId}</Text>
-        </Space>
-      }
-    >
-      <Row gutter={16}>
-        <Col span={12}>
-          <Text type="secondary">Location: </Text>
-          <Text>{vehicle.location || 'Unknown'}</Text>
-        </Col>
-        <Col span={12}>
-          <Text type="secondary">Speed: </Text>
-          <Text>{vehicle.speed || 0} km/h</Text>
-        </Col>
-      </Row>
-    </Card>
-  );
+    return (
+      <Card
+        key={deviceId}
+        className="device-card"
+        size="small"
+        title={
+          <Space>
+            {getStatusIcon(device.status)}
+            <Text strong>{device.name || deviceId}</Text>
+          </Space>
+        }
+        extra={
+          <Text 
+            className={`status-badge ${device.status?.toLowerCase() || 'unknown'}`}
+          >
+            {device.status || 'Unknown'}
+          </Text>
+        }
+      >
+        <Row gutter={16}>
+          <Col span={12}>
+            <Space>
+              <FiBattery size={16} />
+              <Text type="secondary">Energy: </Text>
+              <Text>{safeRender(device.energy_usage)}W</Text>
+            </Space>
+          </Col>
+          <Col span={12}>
+            <Space>
+              <FiThermometer size={16} />
+              <Text type="secondary">Temp: </Text>
+              <Text>{safeRender(device.temperature)}°C</Text>
+            </Space>
+          </Col>
+        </Row>
+        {device.last_updated && (
+          <Text type="secondary" style={{ fontSize: '12px', display: 'block', marginTop: 8 }}>
+            Updated: {new Date(device.last_updated).toLocaleTimeString()}
+          </Text>
+        )}
+      </Card>
+    );
+  };
 
+  const renderVehicleCard = (vehicleId, vehicle) => {
+    // Handle location object properly
+    const formatLocation = (location) => {
+      if (!location) return 'Unknown';
+      
+      // If location is an object with lat/lng
+      if (typeof location === 'object' && location.lat !== undefined && location.lng !== undefined) {
+        return `${location.lat.toFixed(4)}, ${location.lng.toFixed(4)}`;
+      }
+      
+      // If location is a string
+      if (typeof location === 'string') {
+        return location;
+      }
+      
+      // If location is an object but not lat/lng, try to stringify safely
+      if (typeof location === 'object') {
+        try {
+          return JSON.stringify(location);
+        } catch (e) {
+          return 'Invalid location data';
+        }
+      }
+      
+      return 'Unknown';
+    };
+
+    return (
+      <Card
+        key={vehicleId}
+        className="vehicle-card"
+        size="small"
+        title={
+          <Space>
+            <FiTruck />
+            <Text strong>{vehicle.name || vehicleId}</Text>
+          </Space>
+        }
+      >
+        <Row gutter={16}>
+          <Col span={12}>
+            <Text type="secondary">Location: </Text>
+            <Text>{formatLocation(vehicle.location)}</Text>
+          </Col>
+          <Col span={12}>
+            <Text type="secondary">Speed: </Text>
+            <Text>{vehicle.speed || 0} km/h</Text>
+          </Col>
+        </Row>
+        {vehicle.last_updated && (
+          <Text type="secondary" style={{ fontSize: '12px', display: 'block', marginTop: 8 }}>
+            Updated: {new Date(vehicle.last_updated).toLocaleTimeString()}
+          </Text>
+        )}
+      </Card>
+    );
+  };
+
+  // Cleanup timer on unmount
   useEffect(() => {
     return () => {
       if (sessionTimer) {
@@ -318,26 +444,62 @@ const ProjectDashboard = () => {
     };
   }, [sessionTimer]);
 
-  if (loading) return (
-    <div className="dashboard-loading">
-      <div className="loading-spinner"></div>
-      <p>Loading project data...</p>
-    </div>
-  );
+  // Loading state
+  if (loading) {
+    return (
+      <div style={{ 
+        display: 'flex', 
+        flexDirection: 'column', 
+        alignItems: 'center', 
+        justifyContent: 'center', 
+        minHeight: '400px',
+        padding: '40px'
+      }}>
+        <Spin 
+          indicator={<LoadingOutlined style={{ fontSize: 24 }} spin />} 
+          size="large" 
+        />
+        <Text style={{ marginTop: 16, color: '#666' }}>Loading project dashboard...</Text>
+      </div>
+    );
+  }
 
-  if (error) return (
-    <div className="dashboard-error">
-      <div className="error-icon">!</div>
-      <p>{error}</p>
-      <Button 
-        type="primary"
-        icon={<FiArrowLeft />}
-        onClick={() => navigate('/dashboard?tab=devices')}
-      >
-        Back to Projects
-      </Button>
-    </div>
-  );
+  // Error state
+  if (error) {
+    return (
+      <div style={{ 
+        display: 'flex', 
+        flexDirection: 'column', 
+        alignItems: 'center', 
+        justifyContent: 'center', 
+        minHeight: '400px',
+        padding: '40px',
+        textAlign: 'center'
+      }}>
+        <Alert
+          message="Dashboard Error"
+          description={error}
+          type="error"
+          showIcon
+          style={{ marginBottom: 24, maxWidth: 500 }}
+        />
+        <Space>
+          <Button 
+            type="primary"
+            icon={<FiArrowLeft />}
+            onClick={() => navigate('/dashboard?tab=devices')}
+          >
+            Back to Projects
+          </Button>
+          <Button 
+            onClick={fetchProjectData}
+          >
+            Retry
+          </Button>
+        </Space>
+      </div>
+    );
+  }
 
   return (
     <div className="project-dashboard">
@@ -356,9 +518,11 @@ const ProjectDashboard = () => {
             {getProjectIcon()}
             <div>
               <Title level={3} className="project-title">
-                {projectData?.name || 'Project Dashboard'}
+                {projectData?.name || `Project ${projectId}`}
               </Title>
-              <Text type="secondary">{projectData?.description}</Text>
+              <Text type="secondary">
+                {projectData?.description || 'No description available'}
+              </Text>
             </div>
           </div>
         </div>
@@ -418,16 +582,36 @@ const ProjectDashboard = () => {
 
       {/* Content Section */}
       <div className="dashboard-content">
+        {/* Debug Info - Only show in development */}
+        {process.env.NODE_ENV === 'development' && (
+          <div style={{ fontSize: 12, color: '#666', marginBottom: 16 }}>
+            Debug: Role: {userRole}, Project: {projectId}, Session: {sessionId || 'None'}
+          </div>
+        )}
+
         {/* Devices Section */}
         {projectData?.devices && Object.keys(projectData.devices).length > 0 && (
           <div className="section">
-            <Title level={4}>Devices</Title>
+            <Title level={4}>Devices ({Object.keys(projectData.devices).length})</Title>
             <Row gutter={[16, 16]}>
-              {Object.entries(projectData.devices).map(([deviceId, device]) => (
-                <Col xs={24} sm={12} md={8} lg={6} key={deviceId}>
-                  {renderDeviceCard(deviceId, device)}
-                </Col>
-              ))}
+              {Object.entries(projectData.devices).map(([deviceId, device]) => {
+                try {
+                  return (
+                    <Col xs={24} sm={12} md={8} lg={6} key={deviceId}>
+                      {renderDeviceCard(deviceId, device)}
+                    </Col>
+                  );
+                } catch (error) {
+                  console.error(`Error rendering device ${deviceId}:`, error);
+                  return (
+                    <Col xs={24} sm={12} md={8} lg={6} key={deviceId}>
+                      <Card size="small" title={`Device ${deviceId}`}>
+                        <Text type="danger">Error loading device data</Text>
+                      </Card>
+                    </Col>
+                  );
+                }
+              })}
             </Row>
           </div>
         )}
@@ -435,22 +619,62 @@ const ProjectDashboard = () => {
         {/* Vehicles Section */}
         {projectData?.vehicles && Object.keys(projectData.vehicles).length > 0 && (
           <div className="section">
-            <Title level={4}>Vehicles</Title>
+            <Title level={4}>Vehicles ({Object.keys(projectData.vehicles).length})</Title>
             <Row gutter={[16, 16]}>
-              {Object.entries(projectData.vehicles).map(([vehicleId, vehicle]) => (
-                <Col xs={24} sm={12} md={8} lg={6} key={vehicleId}>
-                  {renderVehicleCard(vehicleId, vehicle)}
-                </Col>
-              ))}
+              {Object.entries(projectData.vehicles).map(([vehicleId, vehicle]) => {
+                try {
+                  return (
+                    <Col xs={24} sm={12} md={8} lg={6} key={vehicleId}>
+                      {renderVehicleCard(vehicleId, vehicle)}
+                    </Col>
+                  );
+                } catch (error) {
+                  console.error(`Error rendering vehicle ${vehicleId}:`, error);
+                  return (
+                    <Col xs={24} sm={12} md={8} lg={6} key={vehicleId}>
+                      <Card size="small" title={`Vehicle ${vehicleId}`}>
+                        <Text type="danger">Error loading vehicle data</Text>
+                      </Card>
+                    </Col>
+                  );
+                }
+              })}
             </Row>
           </div>
         )}
 
-        {/* No Data Message */}
+        {/* No Data Available */}
         {(!projectData?.devices || Object.keys(projectData.devices).length === 0) &&
          (!projectData?.vehicles || Object.keys(projectData.vehicles).length === 0) && (
-          <div className="no-data">
-            <Text type="secondary">No devices or vehicles found in this project.</Text>
+          <div className="section">
+            <Alert
+              message="No Data Available"
+              description="This project doesn't have any devices or vehicles configured yet, or the data is still loading."
+              type="info"
+              showIcon
+              style={{ marginBottom: 16 }}
+            />
+            
+            {/* Show some mock data for demo purposes */}
+            <Title level={4}>Sample Dashboard</Title>
+            <Row gutter={[16, 16]}>
+              <Col xs={24} sm={12} md={8} lg={6}>
+                <Card size="small" title="Demo Device" extra={<Text className="status-badge on">ON</Text>}>
+                  <p>This is a sample device card showing how the dashboard would look with real data.</p>
+                  <Text type="secondary" style={{ fontSize: '12px' }}>
+                    Energy: 250W | Temp: 22°C
+                  </Text>
+                </Card>
+              </Col>
+              <Col xs={24} sm={12} md={8} lg={6}>
+                <Card size="small" title="Demo Vehicle">
+                  <p>Sample vehicle tracking data</p>
+                  <Text type="secondary" style={{ fontSize: '12px' }}>
+                    Location: 40.7128, -74.0060 | Speed: 35 km/h
+                  </Text>
+                </Card>
+              </Col>
+            </Row>
           </div>
         )}
       </div>
