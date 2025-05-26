@@ -580,7 +580,7 @@ const GuestControlPanel = ({ userRole }) => {
   ];
 
   return (
-    <div className="guest-control-panel">
+    <div className="">
       <div className="panel-header">
         <Title level={2}>Guest Management</Title>
         <Button 
@@ -657,12 +657,12 @@ const GuestControlPanel = ({ userRole }) => {
         {userRole === 'superadmin' && (
           <TabPane tab="Usage Logs" key="usage-logs">
             <Card>
-              <Title level={4}>Guest Session History</Title>
+              <Title level={5}>Guest Session History</Title>
               <Table
                 dataSource={usageLogs}
                 columns={usageLogsColumns}
                 rowKey="id"
-                pagination={{ pageSize: 20 }}
+                pagination={{ pageSize: 5 }}
                 loading={loading}
               />
             </Card>

@@ -385,7 +385,7 @@ const ProjectsList = ({ userRole }) => {
         return <UserOutlined style={{ color: '#52c41a' }} />;
       default:
         return <UserOutlined style={{ color: '#999' }} />;
-    }
+    } 
   };
 
   const renderProjectCard = (project) => {
@@ -626,7 +626,7 @@ const ProjectsList = ({ userRole }) => {
           />
         )}
       </div>
-      
+        
       <div className="projects-grid">
         {projects.length > 0 ? (
           projects.map(renderProjectCard)
