@@ -462,81 +462,87 @@ const ProjectsList = ({ userRole }) => {
           )
         ]}
       >
-        <div className="project-card-header">
-          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-            {getRoleIcon(userRole)}
-            <Title level={4}>{project.name || `Project ${project.id}`}</Title>
-          </div>
-          <Badge 
-            status={
-              status.type === 'success' ? 'success' : 
-              status.type === 'warning' ? 'warning' : 
-              status.type === 'error' ? 'error' :
-              status.type === 'processing' ? 'processing' :
-              'default'
-            } 
-            text={status.text}
-          />
-        </div>
-        
-        <Text type="secondary" className="project-description">
-          {project.description || 'No description available'}
-        </Text>
-        
-        {/* Active session timer */}
-        {status.type === 'success' && status.time && (
-          <div className="session-timer" style={{ marginTop: 16 }}>
-            <Space direction="vertical" size="small" style={{ width: '100%' }}>
-              <Space>
-                <ClockCircleOutlined />
-                <Text strong>Time Remaining: {formatTime(status.time)}</Text>
-              </Space>
-              <Progress 
-                percent={Math.max(0, (status.time / 60000) * 100)} 
-                size="small" 
-                strokeColor={status.time < 15000 ? '#ff4d4f' : '#52c41a'}
-                showInfo={false}
+        <div className="project-card-content">
+          <div className="project-card-header">
+            <div className="project-title-section">
+              {getRoleIcon(userRole)}
+              <Title level={4}>{project.name || `Project ${project.id}`}</Title>
+            </div>
+            <div className="project-status-section">
+              <Badge 
+                status={
+                  status.type === 'success' ? 'success' : 
+                  status.type === 'warning' ? 'warning' : 
+                  status.type === 'error' ? 'error' :
+                  status.type === 'processing' ? 'processing' :
+                  'default'
+                } 
+                text={status.text}
               />
-            </Space>
+            </div>
           </div>
-        )}
-        
-        {/* Queue information */}
-        {status.type === 'warning' && (
-          <div className="queue-info" style={{ marginTop: 16 }}>
-            <Space direction="vertical" size="small">
-              <Text type="secondary">
-                <UserOutlined /> Position: #{status.position || 0}
-                {status.queueType === 'priority' && (
-                  <Text style={{ color: '#faad14' }}> (Priority)</Text>
-                )}
-              </Text>
-              {status.wait && (
+          
+          <Text type="secondary" className="project-description">
+            {project.description || 'No description available'}
+          </Text>
+          
+          <div className="project-card-dynamic-content">
+            {/* Active session timer */}
+            {status.type === 'success' && status.time && (
+              <div className="session-timer">
+                <Space direction="vertical" size="small" style={{ width: '100%' }}>
+                  <Space>
+                    <ClockCircleOutlined />
+                    <Text strong>Time Remaining: {formatTime(status.time)}</Text>
+                  </Space>
+                  <Progress 
+                    percent={Math.max(0, (status.time / 60000) * 100)} 
+                    size="small" 
+                    strokeColor={status.time < 15000 ? '#ff4d4f' : '#52c41a'}
+                    showInfo={false}
+                  />
+                </Space>
+              </div>
+            )}
+            
+            {/* Queue information */}
+            {status.type === 'warning' && (
+              <div className="queue-info">
+                <Space direction="vertical" size="small">
+                  <Text type="secondary">
+                    <UserOutlined /> Position: #{status.position || 0}
+                    {status.queueType === 'priority' && (
+                      <Text style={{ color: '#faad14' }}> (Priority)</Text>
+                    )}
+                  </Text>
+                  {status.wait && (
+                    <Text type="secondary">
+                      <ClockCircleOutlined /> Estimated wait: {formatTime(status.wait)}
+                    </Text>
+                  )}
+                </Space>
+              </div>
+            )}
+
+            {/* Project in use info */}
+            {status.type === 'error' && status.currentUser && (
+              <div className="in-use-info">
                 <Text type="secondary">
-                  <ClockCircleOutlined /> Estimated wait: {formatTime(status.wait)}
+                  <UserOutlined /> Currently used by: {status.currentUser}
                 </Text>
-              )}
-            </Space>
-          </div>
-        )}
+              </div>
+            )}
 
-        {/* Project in use info */}
-        {status.type === 'error' && status.currentUser && (
-          <div className="in-use-info" style={{ marginTop: 16 }}>
-            <Text type="secondary">
-              <UserOutlined /> Currently used by: {status.currentUser}
-            </Text>
+            {/* Queue activity info */}
+            {status.type === 'processing' && (
+              <div className="queue-activity-info">
+                <Text type="secondary">
+                  <TeamOutlined /> {status.queueLength} users waiting
+                </Text>
+              </div>
+            )}
           </div>
-        )}
-
-        {/* Queue activity info */}
-        {status.type === 'processing' && (
-          <div className="queue-activity-info" style={{ marginTop: 16 }}>
-            <Text type="secondary">
-              <TeamOutlined /> {status.queueLength} users waiting
-            </Text>
-          </div>
-        )}
+        </div>
       </Card>
     );
   };
@@ -604,7 +610,7 @@ const ProjectsList = ({ userRole }) => {
         <Title level={2}>
           <Space>
             {getRoleIcon(userRole)}
-            Projects ({userRole})
+            Projects
           </Space>
         </Title>
         

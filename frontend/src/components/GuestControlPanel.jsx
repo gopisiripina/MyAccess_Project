@@ -655,19 +655,31 @@ const GuestControlPanel = ({ userRole }) => {
         </TabPane>
 
         {userRole === 'superadmin' && (
-          <TabPane tab="Usage Logs" key="usage-logs">
-            <Card>
-              <Title level={5}>Guest Session History</Title>
-              <Table
-                dataSource={usageLogs}
-                columns={usageLogsColumns}
-                rowKey="id"
-                pagination={{ pageSize: 5 }}
-                loading={loading}
-              />
-            </Card>
-          </TabPane>
-        )}
+  <TabPane tab="Usage Logs" key="usage-logs">
+    <Card className="usage-logs-card">
+      <Title level={5}>Guest Session History</Title>
+      <div className="usage-logs-container">
+        <Table
+          className="usage-logs-table"
+          dataSource={usageLogs}
+          columns={usageLogsColumns}
+          rowKey="id"
+          pagination={{ 
+            pageSize: 5, // Back to 5 as requested
+            size: 'default',
+            showSizeChanger: false,
+            showQuickJumper: false,
+            position: ['bottomCenter'], // Center the pagination
+            showTotal: (total, range) => `${range[0]}-${range[1]} of ${total} items`
+          }}
+          loading={loading}
+          size="middle" // Normal table size
+          // Removed scroll prop completely - no scrolling
+        />
+      </div>
+    </Card>
+  </TabPane>
+)}
       </Tabs>
     </div>
   );

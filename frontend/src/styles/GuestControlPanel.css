@@ -22,7 +22,7 @@
   box-sizing: border-box;
   position: sticky;
   top: 0;
-  z-index: 100;
+  z-index: 10;
 }
 
 .panel-header h2 {
@@ -110,7 +110,7 @@
 
 /* Usage Logs specific table container */
 .usage-logs-container {
-  max-height: calc(100vh - 350px);
+  max-height: calc(100vh - 550px);
   overflow-y: auto;
   overflow-x: auto;
 }
@@ -120,10 +120,105 @@
 }
 
 .usage-logs-container .ant-table-tbody {
-  max-height: calc(100vh - 450px);
+  max-height: calc(100vh - 600px); /* Reduced from 450px to 600px */
   overflow-y: auto;
 }
 
+/* Specific styling for Usage Logs tab content */
+.ant-tabs-tabpane[data-tab="usage-logs"] {
+  max-height: calc(100vh - 400px);
+  overflow-y: auto;
+}
+
+/* Usage Logs Card specific height control */
+.usage-logs-container {
+  overflow: visible; /* Remove scrolling */
+}
+
+.usage-logs-container .ant-table-wrapper {
+  overflow: visible; /* Remove scrolling */
+}
+
+.usage-logs-container .ant-table-tbody {
+  overflow: visible; /* Remove scrolling */
+}
+
+/* Usage Logs Card specific height control */
+.usage-logs-card {
+  overflow: visible; /* Remove scrolling */
+}
+
+.usage-logs-card .ant-card-body {
+  overflow: visible; /* Remove scrolling */
+  padding: 16px;
+}
+
+/* Usage Logs Table specific modifications - NO SCROLL */
+.usage-logs-table {
+  overflow: visible !important;
+}
+
+.usage-logs-table .ant-table {
+  overflow: visible !important;
+}
+
+.usage-logs-table .ant-table-container {
+  overflow: visible !important;
+}
+
+.usage-logs-table .ant-table-tbody {
+  overflow: visible !important;
+  max-height: none !important; /* Remove height restriction */
+}
+
+.usage-logs-table .ant-table-body {
+  overflow: visible !important;
+}
+
+.usage-logs-table .ant-table-pagination {
+  padding: 16px 0;
+  margin: 16px 0 0 0;
+  text-align: center;
+}
+
+/* Responsive adjustments for Usage Logs */
+@media (min-width: 1400px) {
+  .usage-logs-container {
+    max-height: calc(100vh - 450px);
+  }
+  
+  .usage-logs-container .ant-table-tbody {
+    max-height: calc(100vh - 550px);
+  }
+}
+
+@media (min-width: 1600px) {
+  .usage-logs-container {
+    max-height: calc(100vh - 420px);
+  }
+  
+  .usage-logs-container .ant-table-tbody {
+    max-height: calc(100vh - 520px);
+  }
+}
+
+@media (max-width: 1200px) {
+  .usage-logs-container {
+    max-height: calc(100vh - 550px);
+  }
+}
+
+@media (max-width: 768px) {
+  .usage-logs-container {
+    max-height: calc(100vh - 600px);
+  }
+}
+
+@media (max-width: 576px) {
+  .usage-logs-container {
+    max-height: calc(100vh - 650px);
+  }
+}
 /* Active Sessions table container */
 .active-sessions-container {
   max-height: calc(100vh - 350px);

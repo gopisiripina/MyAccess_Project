@@ -1,13 +1,18 @@
 /* ProjectsList.css */
 
 .projects-container {
+  /* width: 100%; */
   padding: 24px;
   background: #f5f5f5;
   height: calc(100vh - 64px);
   overflow-y: auto;
   overflow-x: hidden;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
 }
-
+.projects-container::-webkit-scrollbar {
+  display: none; /* Hide scrollbar for webkit browsers */
+}
 .projects-header {
   margin-bottom: 24px;
   position: sticky;
@@ -42,14 +47,48 @@
 }
 
 /* UPDATED: Grid layout with equal height cards */
+/* Add this to your ProjectsList.css file */
+
+/* Disable scrollbar specifically for the projects-grid */
 .projects-grid {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
   gap: 24px;
   margin-top: 16px;
   padding-bottom: 24px;
-  /* Removed fixed height to allow natural scrolling */
+  overflow-y: auto;
+  overflow-x: hidden;
+  /* Hide scrollbar for projects-grid as well */
+  scrollbar-width: none; /* Firefox */
+  -ms-overflow-style: none; /* Internet Explorer 10+ */
 }
+
+.projects-grid::-webkit-scrollbar {
+  display: none; /* Hide scrollbar for webkit browsers */
+}
+
+/* Alternative: If you want to create a scrollable grid with hidden scrollbar */
+.projects-grid-scrollable {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 24px;
+  margin-top: 16px;
+  padding-bottom: 24px;
+  
+  /* Make it scrollable with hidden scrollbar */
+  height: 400px; /* Set a fixed height */
+  overflow-y: auto;
+  overflow-x: hidden;
+  
+  /* Hide scrollbar */
+  scrollbar-width: none; /* Firefox */
+  -ms-overflow-style: none; /* Internet Explorer 10+ */
+}
+
+.projects-card-scrollable::-webkit-scrollbar {
+  display: none; /* Hide scrollbar for webkit browsers */
+}
+
 
 .project-card {
   border-radius: 12px;
@@ -60,9 +99,11 @@
   background: #ffffff;
   width: 100%;
   /* UPDATED: Fixed height for all cards to be the same size */
-  height: 420px;
+  height: 220px;
   display: flex;
   flex-direction: column;
+  scrollbar-width: none; /* Firefox */
+  -ms-overflow-style: none; /* Internet Explorer 10+ */
 }
 
 .project-card:hover {
@@ -91,6 +132,8 @@
   flex-direction: column;
   padding: 20px;
   padding-bottom: 0;
+  height: 60%;
+  min-height: 0; /* Allow flex children to shrink */
 }
 
 .project-card-header {
@@ -359,7 +402,7 @@
   }
   
   .project-card {
-    height: 400px;
+    height: 220px;
   }
 }
 
@@ -389,7 +432,7 @@
   }
   
   .project-card {
-    height: 380px;
+    height: 220px;
   }
   
   .project-card-content {
@@ -470,7 +513,7 @@
   
   .project-card {
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-    height: 360px;
+    height: 220px;
   }
   
   .project-card-content {
@@ -539,7 +582,7 @@
   }
   
   .project-card {
-    height: 340px;
+    height: 220px;
   }
   
   .project-card-content {
