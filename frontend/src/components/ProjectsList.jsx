@@ -114,7 +114,7 @@ const ProjectsList = ({ userRole }) => {
       try {
         // Use unified queue status endpoint for all user types
         const response = await axios.get(
-          `http://localhost:5000/api/projects/${project.id}/queue-status`,
+          `http://localhost:5000/api/guests/projects/${project.id}/queue-status`,
           config
         );
         
